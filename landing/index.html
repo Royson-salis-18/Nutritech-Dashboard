@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NutriTech — Plant Intelligence Platform</title>
+  <meta name="description" content="NutriTech experimental plant health monitoring platform — real-time sensing, ML-powered analytics, and adaptive control." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #22d3ee;
+      --accent2: #818cf8;
+      --accent3: #34d399;
+      --bg: #050a14;
+      --surface: rgba(255,255,255,0.035);
+      --border: rgba(255,255,255,0.08);
+      --text: #f1f5f9;
+      --muted: #64748b;
+    }
+
+    html, body {
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* ── Animated gradient background ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(34,211,238,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 80%, rgba(129,140,248,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(52,211,153,0.04) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Grid dots overlay ── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1.5rem 4rem;
+    }
+
+    /* ── Status pill ── */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 1rem;
+      border: 1px solid rgba(34,211,238,0.25);
+      border-radius: 999px;
+      background: rgba(34,211,238,0.06);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 2.5rem;
+      animation: fadeDown 0.6s ease both;
+    }
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    /* ── Hero ── */
+    .hero { text-align: center; margin-bottom: 1rem; animation: fadeDown 0.7s ease 0.1s both; }
+    .hero h1 {
+      font-size: clamp(2.6rem, 6vw, 5rem);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #f1f5f9 30%, var(--accent) 70%, var(--accent2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero .sub {
+      margin-top: 1.25rem;
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 560px;
+      line-height: 1.7;
+    }
+
+    /* ── Setup description ── */
+    .setup-card {
+      margin: 2.5rem 0 3.5rem;
+      max-width: 720px;
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1.25rem;
+      padding: 2rem 2.25rem;
+      animation: fadeUp 0.7s ease 0.25s both;
+      backdrop-filter: blur(12px);
+    }
+    .setup-card h2 {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.9rem;
+    }
+    .setup-card p {
+      font-size: 0.925rem;
+      color: #94a3b8;
+      line-height: 1.8;
+    }
+    .setup-card .meta-row {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-top: 1.4rem;
+      padding-top: 1.4rem;
+      border-top: 1px solid var(--border);
+    }
+    .meta-item { display: flex; flex-direction: column; gap: 0.2rem; }
+    .meta-item .label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
+    .meta-item .value { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+
+    /* ── Nav Cards ── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+      max-width: 900px;
+      width: 100%;
+    }
+
+    .card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+      padding: 2rem;
+      border-radius: 1.5rem;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      backdrop-filter: blur(16px);
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      overflow: hidden;
+      transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+      animation: fadeUp 0.6s ease both;
+    }
+    .card:nth-child(1) { animation-delay: 0.3s; }
+    .card:nth-child(2) { animation-delay: 0.42s; }
+    .card:nth-child(3) { animation-delay: 0.54s; }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .card-blue::before  { background: radial-gradient(ellipse 80% 80% at 50% 0%, rgba(34,211,238,0.12), transparent); }
+    .card-purple::before{ background: radial-gradient(ellipse 80% 80% at 50% 0%, rgba(129,140,248,0.12), transparent); }
+    .card-green::before { background: radial-gradient(ellipse 80% 80% at 50% 0%, rgba(52,211,153,0.12), transparent); }
+
+    .card:hover::before { opacity: 1; }
+    .card-blue:hover  { border-color: rgba(34,211,238,0.4);  box-shadow: 0 0 40px rgba(34,211,238,0.08);  transform: translateY(-4px); }
+    .card-purple:hover{ border-color: rgba(129,140,248,0.4); box-shadow: 0 0 40px rgba(129,140,248,0.08); transform: translateY(-4px); }
+    .card-green:hover { border-color: rgba(52,211,153,0.4);  box-shadow: 0 0 40px rgba(52,211,153,0.08);  transform: translateY(-4px); }
+
+    .card.disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+
+    .card-icon {
+      width: 52px; height: 52px;
+      border-radius: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem;
+    }
+    .icon-blue   { background: rgba(34,211,238,0.12);  border: 1px solid rgba(34,211,238,0.2); }
+    .icon-purple { background: rgba(129,140,248,0.12); border: 1px solid rgba(129,140,248,0.2); }
+    .icon-green  { background: rgba(52,211,153,0.12);  border: 1px solid rgba(52,211,153,0.2); }
+
+    .card-body h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .card-body p  { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+
+    .card-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      width: fit-content;
+    }
+    .badge-blue   { background: rgba(34,211,238,0.1);  color: var(--accent);  border: 1px solid rgba(34,211,238,0.2); }
+    .badge-purple { background: rgba(129,140,248,0.1); color: var(--accent2); border: 1px solid rgba(129,140,248,0.2); }
+    .badge-green  { background: rgba(52,211,153,0.1);  color: var(--accent3); border: 1px solid rgba(52,211,153,0.2); }
+    .badge-grey   { background: rgba(100,116,139,0.1); color: var(--muted);   border: 1px solid rgba(100,116,139,0.2); }
+
+    .card-arrow {
+      position: absolute;
+      top: 1.5rem; right: 1.5rem;
+      font-size: 1rem;
+      opacity: 0;
+      transform: translateX(-4px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    .card:hover .card-arrow { opacity: 1; transform: translateX(0); }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 4rem;
+      font-size: 0.75rem;
+      color: #334155;
+      text-align: center;
+      animation: fadeUp 0.6s ease 0.8s both;
+    }
+
+    @keyframes fadeDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: none; } }
+    @keyframes fadeUp   { from { opacity: 0; transform: translateY(20px);  } to { opacity: 1; transform: none; } }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+
+    <div class="status-pill">
+      <span class="status-dot"></span>
+      Experiment Active — Live Sensing
+    </div>
+
+    <div class="hero">
+      <h1>NutriTech<br/>Intelligence Platform</h1>
+      <p class="sub">
+        Precision plant health monitoring with real-time sensor fusion,
+        physics-based scoring, and ML-powered predictive analytics.
+      </p>
+    </div>
+
+    <div class="setup-card">
+      <h2>Experimental Setup</h2>
+      <p>
+        This platform tracks modular tub-based growing environments instrumented with
+        soil moisture, NPK, EC, pH, temperature, humidity, VPD and light sensors.
+        Data is ingested continuously into Supabase, cleaned, and scored using both
+        physics-derived formulas and machine-learning models to give a complete picture
+        of plant health, stress accumulation, and growth trajectory.
+      </p>
+      <div class="meta-row">
+        <div class="meta-item">
+          <span class="label">Platform</span>
+          <span class="value">NutriTech v1.0</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Data Backend</span>
+          <span class="value">Supabase + Flask</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Analytics</span>
+          <span class="value">XGBoost · Physics Engine</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Status</span>
+          <span class="value" style="color: #34d399;">● Live</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cards">
+
+      <!-- Dashboard -->
+      <a id="btn-dashboard" href="/dashboard" class="card card-blue">
+        <span class="card-arrow">↗</span>
+        <div class="card-icon icon-blue">📊</div>
+        <div class="card-body">
+          <h3>Data Dashboard</h3>
+          <p>Real-time charts, physical health scores, ML predictions, and tub-level comparison analytics.</p>
+        </div>
+        <span class="card-badge badge-blue">● Live Data</span>
+      </a>
+
+      <!-- Experiment Entry -->
+      <a id="btn-entry" href="/entry" class="card card-purple">
+        <span class="card-arrow">↗</span>
+        <div class="card-icon icon-purple">🧪</div>
+        <div class="card-body">
+          <h3>Experiment Entry</h3>
+          <p>Log new experiments, configure tubs, and record manual observations and plant health labels.</p>
+        </div>
+        <span class="card-badge badge-purple">⏳ Coming Soon</span>
+      </a>
+
+      <!-- Control Panel -->
+      <a id="btn-control" href="https://hierocratical-kaylie-semivocal.ngrok-free.dev" class="card card-green">
+        <span class="card-arrow">↗</span>
+        <div class="card-icon icon-green">🎛️</div>
+        <div class="card-body">
+          <h3>Control Panel</h3>
+          <p>Access the hardware control interface to manage irrigation, lighting schedules, and sensor calibration.</p>
+        </div>
+        <span class="card-badge badge-green">External Link</span>
+      </a>
+
+    </div>
+
+    <footer class="footer">
+      NutriTech Experimental Platform &nbsp;·&nbsp; 2026 &nbsp;·&nbsp; All sensor data is stored securely in Supabase
+    </footer>
+
+  </div>
+</body>
+</html>

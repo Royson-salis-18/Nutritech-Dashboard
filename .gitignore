@@ -1,0 +1,29 @@
+# Python dependencies
+__pycache__/
+*.py[cod]
+*$py.class
+.venv
+venv/
+ENV/
+env/
+.env
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Frontend build outputs (served by Flask)
+frontend/nutritech-dashboard/dist/
+frontend/nutritech-dashboard/node_modules/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
