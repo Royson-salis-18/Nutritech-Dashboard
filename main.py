@@ -6,10 +6,16 @@ Runs all formulas and writes processed results back to Supabase
 
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.middleware.wsgi import WSGIMiddleware
 import httpx
 import os
+import sys
 import logging
 from dotenv import load_dotenv
+
+# Allow importing from backend/
+sys.path.append(os.path.join(os.path.dirname(__file__), "backend"))
+from app import create_app
 from calculations import process_raw_data
 
 load_dotenv()
@@ -81,3 +87,13 @@ async def handle_raw_data(request: Request):
 
     logger.info(f"Successfully wrote processed data for raw_id={raw.get('id')}")
     return JSONResponse({"status": "success", "processed_id": processed.get("raw_data_id")})
+
+
+# ── Mount Flask Dashboard ──────────────────────────────────────────────────
+# Wrap the existing Flask dashboard app in a WSGI middleware for FastAPI
+flask_app = create_app()
+app.mount("/", WSGIMiddleware(flask_app))
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
