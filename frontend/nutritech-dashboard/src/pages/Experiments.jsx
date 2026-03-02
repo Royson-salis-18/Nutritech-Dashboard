@@ -34,9 +34,14 @@ export default function Experiments() {
   const [experiments, setExperiments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [step, setStep] = useState(1);
+  const [formData, setFormData] = useState({ title: "", description: "", num_buckets: 1 });
+  const [tubs, setTubs] = useState([]);
+  
   const location = useLocation();
 
-  useEffect(() => {
+  const fetchExperiments = useCallback(() => {
     setLoading(true);
     API.get("/experiments/")
       .then((res) => {
@@ -46,8 +51,46 @@ export default function Experiments() {
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    fetchExperiments();
+  }, [fetchExperiments]);
+
+  const handleNext = () => {
+    if (step === 1) {
+      const count = parseInt(formData.num_buckets) || 1;
+      const initialTubs = Array.from({ length: count }, (_, i) => ({
+        bucket_number: i + 1,
+        soil_type: "Standard",
+        plant_type: ""
+      }));
+      setTubs(initialTubs);
+      setStep(2);
+    }
+  };
+
+  const handleCreate = async () => {
+    setLoading(true);
+    try {
+      const expRes = await API.post("/experiments/", formData);
+      const expId = expRes.data.experiment.id;
+      
+      for (const tub of tubs) {
+        await API.post(`/experiments/${expId}/buckets`, tub);
+      }
+      
+      setShowAddModal(false);
+      setStep(1);
+      setFormData({ title: "", description: "", num_buckets: 1 });
+      fetchExperiments();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const totalOngoing = experiments.filter(
-    (e) => (e.status || "").toLowerCase() === "ongoing",
+    (e) => (e.status || "").toLowerCase() === "ongoing" || (e.status || "").toLowerCase() === "active",
   ).length;
 
   return (
@@ -71,11 +114,15 @@ export default function Experiments() {
               System Online
             </div>
             <button
-              onClick={() => {
-                setLoading(true);
-                API.get("/experiments/").then(res => setExperiments(res.data.data || [])).finally(() => setLoading(false));
-              }}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-900/50 text-xs text-slate-300 hover:border-cyan-500/50 hover:text-cyan-400 transition-all active:scale-95"
+              onClick={() => setShowAddModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-500 text-slate-900 font-bold text-xs uppercase tracking-widest hover:bg-cyan-400 transition-all active:scale-95 shadow-lg shadow-cyan-500/20"
+            >
+              <span className="material-symbols-outlined text-base">add_circle</span>
+              New Protocol
+            </button>
+            <button
+              onClick={fetchExperiments}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-900/50 text-xs text-slate-300 hover:border-cyan-500/50 hover:text-cyan-400 transition-all active:scale-95 shadow-sm"
             >
               <span className="material-symbols-outlined text-sm">sync</span>
               Sync
@@ -144,6 +191,121 @@ export default function Experiments() {
         {error && (
           <div className="mb-4 rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
             ⚠ {error}
+          </div>
+        )}
+
+        {/* Modal Overlay */}
+        {showAddModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl">
+              <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center">
+                <h3 className="font-black uppercase tracking-widest text-sm text-cyan-400">
+                  {step === 1 ? "Initialize Protocol" : "Configure Tubs"}
+                </h3>
+                <button onClick={() => setShowAddModal(false)} className="text-slate-500 hover:text-white transition-colors">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+
+              <div className="p-6">
+                {step === 1 ? (
+                  <div className="space-y-4">
+                    <div className="space-y-1">
+                      <label className="text-[0.6rem] font-black text-slate-500 uppercase tracking-widest ml-1">Experiment Title</label>
+                      <input 
+                        className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-cyan-500 outline-none"
+                        placeholder="e.g. Hydroponic Phase Alpha"
+                        value={formData.title}
+                        onChange={e => setFormData({...formData, title: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[0.6rem] font-black text-slate-500 uppercase tracking-widest ml-1">Description</label>
+                      <textarea 
+                        className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-sm h-24 focus:ring-1 focus:ring-cyan-500 outline-none"
+                        placeholder="Research objectives and parameters..."
+                        value={formData.description}
+                        onChange={e => setFormData({...formData, description: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[0.6rem] font-black text-slate-500 uppercase tracking-widest ml-1">Number of Tubs</label>
+                      <input 
+                        type="number"
+                        min="1" max="12"
+                        className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-cyan-500 outline-none"
+                        value={formData.num_buckets}
+                        onChange={e => setFormData({...formData, num_buckets: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
+                    {tubs.map((tub, i) => (
+                      <div key={i} className="p-4 bg-slate-950/30 border border-slate-800/50 rounded-2xl flex gap-4 items-end">
+                        <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center text-xs font-black text-slate-400">
+                          #{tub.bucket_number}
+                        </div>
+                        <div className="flex-1 space-y-1">
+                          <label className="text-[0.6rem] font-black text-slate-500 uppercase tracking-widest ml-1">Plant Name</label>
+                          <input 
+                            className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-cyan-500 outline-none"
+                            placeholder="Tomato / Lettuce"
+                            value={tub.plant_type}
+                            onChange={e => {
+                              const newTubs = [...tubs];
+                              newTubs[i].plant_type = e.target.value;
+                              setTubs(newTubs);
+                            }}
+                          />
+                        </div>
+                        <div className="flex-1 space-y-1">
+                          <label className="text-[0.6rem] font-black text-slate-500 uppercase tracking-widest ml-1">Soil Type</label>
+                          <select 
+                            className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-cyan-500 outline-none"
+                            value={tub.soil_type}
+                            onChange={e => {
+                              const newTubs = [...tubs];
+                              newTubs[i].soil_type = e.target.value;
+                              setTubs(newTubs);
+                            }}
+                          >
+                            <option value="Standard">Standard</option>
+                            <option value="Sandy">Sandy</option>
+                            <option value="Clay">Clay</option>
+                            <option value="Loam">Loam</option>
+                          </select>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="px-6 py-4 bg-slate-950/50 border-t border-slate-800 flex justify-end gap-3">
+                <button 
+                  onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white transition-colors"
+                >
+                  CANCEL
+                </button>
+                {step === 1 ? (
+                  <button 
+                    onClick={handleNext}
+                    className="px-6 py-2 rounded-xl bg-slate-800 text-white font-bold text-xs uppercase tracking-widest hover:bg-slate-700 transition-all"
+                  >
+                    NEXT: CONFIGURE TUBS
+                  </button>
+                ) : (
+                  <button 
+                    onClick={handleCreate}
+                    className="px-6 py-2 rounded-xl bg-cyan-500 text-slate-950 font-bold text-xs uppercase tracking-widest hover:bg-cyan-400 transition-all shadow-lg shadow-cyan-500/20"
+                  >
+                    {loading ? "SAVING..." : "FINALIZE PROTOCOL"}
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         )}
 

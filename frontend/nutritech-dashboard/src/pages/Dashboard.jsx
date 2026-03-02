@@ -39,7 +39,7 @@ function ScorePill({ label, value, color }) {
   );
 }
 
-function TubCard({ tub, onClick, selected }) {
+function TubCard({ tub, onClick, selected, onPredict, isPredicting }) {
   const hc = scoreColor(tub.health_t);
   const state =
     tub.pred_health_t != null
@@ -65,92 +65,105 @@ function TubCard({ tub, onClick, selected }) {
       : "bg-rose-500/10 text-rose-400";
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <div
       className={[
-        "group rounded-xl border p-5 text-left transition-all cursor-pointer w-full",
+        "group rounded-xl border p-5 text-left transition-all w-full relative",
         "bg-slate-100/60 dark:bg-slate-900/60",
         selected
           ? "border-cyan-400 shadow-[0_0_24px_rgba(34,211,238,0.35)]"
           : "border-slate-200 dark:border-slate-800 hover:border-cyan-400/60",
       ].join(" ")}
     >
-      {/* coloured bar */}
-      <div
-        className="h-1.5 rounded-full mb-3"
-        style={{ backgroundColor: hc }}
-      />
+      <div className="cursor-pointer" onClick={onClick}>
+        {/* coloured bar */}
+        <div
+          className="h-1.5 rounded-full mb-3"
+          style={{ backgroundColor: hc }}
+        />
 
-      <div className="flex items-start justify-between mb-2">
-        <div>
-          <div className="text-sm font-bold">
-            {tub.tub_label || `Tub ${tub.tub_id}`}
+        <div className="flex items-start justify-between mb-2">
+          <div>
+            <div className="text-sm font-bold">
+              {tub.tub_label || `Tub ${tub.tub_id}`}
+            </div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">
+              {tub.plant_name || "—"}
+            </div>
           </div>
-          <div className="text-xs text-slate-500 dark:text-slate-400">
-            {tub.plant_name || "—"}
-          </div>
+          <span className="badge badge-grey">
+            {tub.soil_type || "soil"}
+          </span>
         </div>
-        <span className="badge badge-grey">
-          {tub.soil_type || "soil"}
-        </span>
-      </div>
 
-      <div className="grid grid-cols-3 gap-2 mb-3">
-        <ScorePill
-          label="Health"
-          value={tub.health_t}
-          color={scoreColor(tub.health_t)}
-        />
-        <ScorePill
-          label="Stress"
-          value={tub.stress_t}
-          color={scoreColor(1 - (tub.stress_t ?? 0))}
-        />
-        <ScorePill
-          label="Risk"
-          value={tub.risk_t}
-          color={scoreColor(1 - (tub.risk_t ?? 0))}
-        />
-      </div>
-
-      {tub.pred_health_t != null && (
-        <div className="mt-3 pt-3 border-t border-slate-200/70 dark:border-slate-800/80 flex gap-2">
+        <div className="grid grid-cols-3 gap-2 mb-3">
           <ScorePill
-            label="↯ Hlth"
-            value={tub.pred_health_t}
-            color="#818cf8"
+            label="Health"
+            value={tub.health_t}
+            color={scoreColor(tub.health_t)}
           />
           <ScorePill
-            label="↯ Str"
-            value={tub.pred_stress_t}
-            color="#818cf8"
+            label="Stress"
+            value={tub.stress_t}
+            color={scoreColor(1 - (tub.stress_t ?? 0))}
           />
           <ScorePill
-            label="↯ Risk"
-            value={tub.pred_risk_t}
-            color="#818cf8"
+            label="Risk"
+            value={tub.risk_t}
+            color={scoreColor(1 - (tub.risk_t ?? 0))}
           />
         </div>
-      )}
 
-      <div className="mt-3 flex items-center justify-between text-[0.68rem] text-slate-500 dark:text-slate-400">
-        <span>
-          {tub.timestamp
-            ? new Date(tub.timestamp).toLocaleString()
-            : "No timestamp"}
-        </span>
-        <span
-          className={[
-            "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6rem] font-semibold uppercase tracking-[0.12em]",
-            badgeColor,
-          ].join(" ")}
-        >
-          <span className="size-1.5 rounded-full bg-current" />
-          {stateLabel}
-        </span>
+        {tub.pred_health_t != null && (
+          <div className="mt-3 pt-3 border-t border-slate-200/70 dark:border-slate-800/80 flex gap-2">
+            <ScorePill
+              label="↯ Hlth"
+              value={tub.pred_health_t}
+              color="#818cf8"
+            />
+            <ScorePill
+              label="↯ Str"
+              value={tub.pred_stress_t}
+              color="#818cf8"
+            />
+            <ScorePill
+              label="↯ Risk"
+              value={tub.pred_risk_t}
+              color="#818cf8"
+            />
+          </div>
+        )}
+
+        <div className="mt-3 flex items-center justify-between text-[0.68rem] text-slate-500 dark:text-slate-400">
+          <span>
+            {tub.timestamp
+              ? new Date(tub.timestamp).toLocaleString()
+              : "No timestamp"}
+          </span>
+          <span
+            className={[
+              "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6rem] font-semibold uppercase tracking-[0.12em]",
+              badgeColor,
+            ].join(" ")}
+          >
+            <span className="size-1.5 rounded-full bg-current" />
+            {stateLabel}
+          </span>
+        </div>
       </div>
-    </button>
+
+      <button 
+        onClick={(e) => { e.stopPropagation(); onPredict(tub.tub_id); }}
+        disabled={isPredicting}
+        className="mt-4 w-full py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-[0.65rem] font-bold text-cyan-400 border border-cyan-400/20 transition-all flex items-center justify-center gap-2"
+      >
+        {isPredicting ? (
+          <div className="size-3 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+        ) : (
+          <span className="material-symbols-outlined text-sm">psychology</span>
+        )}
+        {isPredicting ? "ANALYZING..." : "PREDICT"}
+      </button>
+    </div>
   );
 }
 
@@ -164,6 +177,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [viewMode, setViewMode] = useState("Combined View"); // "Combined View" or "Individual Tub View"
+  const [predictionResult, setPredictionResult] = useState(null);
+  const [predictingId, setPredictingId] = useState(null);
 
   // Load experiments
   useEffect(() => {
@@ -194,6 +209,23 @@ export default function Dashboard() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [selectedExp, selectedTub]);
+
+  const handlePredict = async (tubId) => {
+    setPredictingId(tubId);
+    try {
+      const res = await API.post("/ml/predict", { tub_id: tubId });
+      if (res.data.success) {
+        setPredictionResult({
+          ...res.data.prediction,
+          tub_label: summary.find(t => t.tub_id === tubId)?.tub_label || `Tub ${tubId}`
+        });
+      }
+    } catch (e) {
+      setError("Prediction failed: " + e.message);
+    } finally {
+      setPredictingId(null);
+    }
+  };
 
   useEffect(() => {
     loadSummary();
@@ -384,14 +416,16 @@ export default function Dashboard() {
               <div className="space-y-10">
                 {viewMode === "Combined View" ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {summary.map((tub) => (
-                      <TubCard
-                        key={tub.tub_id}
-                        tub={tub}
-                        selected={tub.tub_id === selectedTub}
-                        onClick={() => setSelectedTub(tub.tub_id)}
-                      />
-                    ))}
+                      {summary.map((tub) => (
+                        <TubCard
+                          key={tub.tub_id}
+                          tub={tub}
+                          selected={tub.tub_id === selectedTub}
+                          onClick={() => setSelectedTub(tub.tub_id)}
+                          onPredict={handlePredict}
+                          isPredicting={predictingId === tub.tub_id}
+                        />
+                      ))}
                     {summary.length === 0 && (
                       <div className="text-slate-500 text-sm p-6">
                         No tubs found for this experiment. Run the pipeline first.
@@ -549,6 +583,61 @@ export default function Dashboard() {
         <span>NutriTech Experimental Platform</span>
         <span>Dashboard · {new Date().getFullYear()}</span>
       </footer>
+
+      {/* Prediction Result Modal */}
+      {predictionResult && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-gradient-to-r from-cyan-500/10 to-transparent">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-cyan-400">psychology</span>
+                <h3 className="font-black uppercase tracking-widest text-xs text-white">
+                  ML Analysis Result
+                </h3>
+              </div>
+              <button onClick={() => setPredictionResult(null)} className="text-slate-500 hover:text-white transition-colors">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <div className="p-8 text-center">
+              <div className="mb-6">
+                <div className="text-[0.65rem] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Target Environment</div>
+                <div className="text-xl font-bold text-white">{predictionResult.tub_label}</div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                <div className="p-4 bg-slate-950/40 border border-slate-800 rounded-2xl">
+                  <div className="text-[0.6rem] font-black text-slate-500 uppercase tracking-widest mb-1">Pred. Health</div>
+                  <div className="text-2xl font-black text-emerald-400">{fmtScore(predictionResult.health_score)}</div>
+                </div>
+                <div className="p-4 bg-slate-950/40 border border-slate-800 rounded-2xl">
+                  <div className="text-[0.6rem] font-black text-slate-500 uppercase tracking-widest mb-1">Pred. Stress</div>
+                  <div className="text-2xl font-black text-rose-400">{fmtScore(predictionResult.stress_index)}</div>
+                </div>
+              </div>
+
+              <div className="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl mb-6">
+                <div className="text-[0.6rem] font-black text-cyan-500/70 uppercase tracking-widest mb-1">System Risk Level</div>
+                <div className="text-lg font-black text-cyan-400 uppercase tracking-widest">{predictionResult.risk_level}</div>
+              </div>
+
+              <p className="text-[0.7rem] text-slate-500 leading-relaxed italic">
+                Analysis generated via pre-deployed XGBoost regressor using real-time telemetry from {predictionResult.tub_label}.
+              </p>
+            </div>
+
+            <div className="px-6 py-4 bg-slate-950/50 border-t border-slate-800">
+              <button 
+                onClick={() => setPredictionResult(null)}
+                className="w-full py-3 rounded-xl bg-slate-800 text-white font-bold text-xs uppercase tracking-widest hover:bg-slate-700 transition-all active:scale-95"
+              >
+                DISMISS
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
