@@ -6,88 +6,455 @@
   <title>NutriTech — Experiment Entry</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
+      --accent: #22d3ee;
+      --accent2: #818cf8;
+      --accent3: #34d399;
       --bg: #050a14;
-      --surface: rgba(255,255,255,0.04);
+      --surface: rgba(255,255,255,0.035);
       --border: rgba(255,255,255,0.08);
       --text: #f1f5f9;
       --muted: #64748b;
-      --accent: #818cf8;
     }
-    html, body { min-height: 100vh; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+    html, body { min-height: 100vh; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
     body::before {
-      content: '';
-      position: fixed; inset: 0;
-      background:
-        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(129,140,248,0.10) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 50% at 80% 80%, rgba(34,211,238,0.06) 0%, transparent 60%);
-      pointer-events: none;
+      content: ''; position: fixed; inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(129,140,248,0.08) 0%, transparent 60%),
+                  radial-gradient(ellipse 60% 50% at 80% 80%, rgba(34,211,238,0.07) 0%, transparent 60%);
+      pointer-events: none; z-index: 0;
     }
-    .wrap { position: relative; min-height: 100vh; display: grid; place-items: center; padding: 2rem; }
-    .card {
-      width: 100%;
-      max-width: 720px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 2rem;
-      backdrop-filter: blur(14px);
+    .wrapper { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 3rem 1.5rem; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3rem; }
+    .back-link { display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; transition: color 0.2s ease; }
+    .back-link:hover { color: var(--accent); }
+    .title-section h1 { font-size: 2.5rem; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 0.5rem; background: linear-gradient(135deg, #fff 0%, var(--accent2) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .title-section p { color: var(--muted); font-size: 1rem; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 1.5rem; padding: 2rem; backdrop-filter: blur(12px); height: fit-content; }
+    .card-title { display: flex; align-items: center; gap: 0.75rem; font-size: 1.1rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--text); }
+    .card-title .icon { width: 32px; height: 32px; border-radius: 0.5rem; background: rgba(129,140,248,0.15); color: var(--accent2); display: flex; align-items: center; justify-content: center; }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label { display: block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.5rem; }
+    .form-control { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 0.75rem; padding: 0.75rem 1rem; color: var(--text); font-family: inherit; font-size: 0.9rem; transition: all 0.2s ease; }
+    .form-control:focus { outline: none; border-color: var(--accent2); box-shadow: 0 0 0 4px rgba(129,140,248,0.1); }
+    .btn { width: 100%; padding: 0.85rem; border-radius: 0.75rem; border: none; font-family: inherit; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+    .btn-primary { background: linear-gradient(135deg, var(--accent2), #6366f1); color: white; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn:hover { transform: translateY(-2px); opacity: 0.9; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .experiment-list { display: flex; flex-direction: column; gap: 1rem; }
+    .experiment-item { padding: 1.25rem; border-radius: 1rem; background: rgba(255,255,255,0.02); border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: all 0.2s ease; }
+    .experiment-item:hover { border-color: var(--accent2); background: rgba(129,140,248,0.05); }
+    .experiment-item.active { border-color: var(--accent2); background: rgba(129,140,248,0.1); }
+    .exp-info h4 { font-size: 0.95rem; margin-bottom: 0.25rem; }
+    .exp-info p { font-size: 0.75rem; color: var(--muted); }
+    .tub-list { margin-top: 1.5rem; display: grid; gap: 1rem; }
+    .tub-item { padding: 1.25rem; border-radius: 1rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); }
+    .tub-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .tub-header h5 { font-size: 0.85rem; font-weight: 700; }
+    .tub-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
+    .action-btn { padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 700; cursor: pointer; border: none; display: flex; align-items: center; gap: 0.35rem; transition: all 0.2s ease; }
+    .btn-sense { background: rgba(34,211,238,0.1); color: var(--accent); border: 1px solid rgba(34,211,238,0.2); }
+    .btn-predict { background: rgba(52,211,153,0.1); color: var(--accent3); border: 1px solid rgba(52,211,153,0.2); }
+    .action-btn:hover { transform: scale(1.05); }
+    .status-badge { font-size: 0.6rem; font-weight: 800; padding: 0.2rem 0.5rem; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .status-sensing { background: rgba(34,211,238,0.1); color: var(--accent); }
+    .status-predicting { background: rgba(52,211,153,0.1); color: var(--accent3); }
+    .animate-spin { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+    
+    .tub-input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .tub-input-grid input { padding: 0.5rem 0.75rem; font-size: 0.8rem; border-radius: 0.5rem; }
+
+    /* Custom Keyboard Styles */
+    #keyboard-container {
+      position: fixed; bottom: -100%; left: 0; width: 100%;
+      background: #0f172a; border-top: 1px solid var(--border);
+      padding: 1rem; z-index: 1000; transition: bottom 0.3s ease;
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
     }
-    .pill {
-      display: inline-flex; align-items: center; gap: 0.5rem;
-      padding: 0.35rem 0.85rem;
-      border-radius: 999px;
-      background: rgba(129,140,248,0.12);
-      border: 1px solid rgba(129,140,248,0.25);
-      color: var(--accent);
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      font-size: 0.7rem;
-      margin-bottom: 1rem;
+    #keyboard-container.visible { bottom: 0; }
+    .keyboard-grid {
+      max-width: 800px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(10, 1fr); gap: 0.5rem;
     }
-    h1 { font-size: 2rem; line-height: 1.1; margin-bottom: 0.75rem; }
-    p { color: #94a3b8; line-height: 1.7; margin-bottom: 1.25rem; }
-    .actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
-    a.btn {
-      text-decoration: none;
-      display: inline-flex; align-items: center; justify-content: center;
-      padding: 0.75rem 1rem;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.05);
-      color: var(--text);
-      font-weight: 700;
-      font-size: 0.9rem;
-      transition: transform 0.15s ease, border-color 0.15s ease;
+    .key {
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text); padding: 0.75rem 0; border-radius: 0.5rem;
+      text-align: center; cursor: pointer; font-weight: 600; font-size: 0.9rem;
+      transition: all 0.1s ease; user-select: none;
     }
-    a.btn:hover { transform: translateY(-1px); border-color: rgba(129,140,248,0.35); }
-    a.btn.primary { background: rgba(129,140,248,0.14); border-color: rgba(129,140,248,0.30); }
-    .note { margin-top: 1rem; font-size: 0.82rem; color: var(--muted); }
-    code { background: rgba(15,23,42,0.6); padding: 0.15rem 0.35rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06); }
+    .key:active { background: var(--accent2); transform: scale(0.95); }
+    .key.wide { grid-column: span 2; background: rgba(255,255,255,0.08); }
+    .key.extra-wide { grid-column: span 3; background: var(--accent2); }
+
+    /* Auth Overlay */
+    #auth-overlay {
+      position: fixed; inset: 0; background: var(--bg);
+      z-index: 2000; display: flex; align-items: center; justify-content: center;
+    }
+    #auth-overlay.hidden { display: none; }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <div class="pill">Experiment Entry</div>
-      <h1>Coming soon</h1>
-      <p>
-        This will be the page for creating experiments, mapping tubs, and entering manual observations/labels.
-        For now, you can run the pipeline and view physical + ML scores in the dashboard.
-      </p>
-      <div class="actions">
-        <a class="btn" href="/">← Back to Landing</a>
-        <a class="btn primary" href="/dashboard">Open Dashboard →</a>
+  <!-- Auth Overlay -->
+  <div id="auth-overlay">
+    <div class="card" style="width: 100%; max-width: 400px;">
+      <div class="card-title">
+        <div class="icon"><span class="material-symbols-outlined">lock</span></div>
+        Admin Login
       </div>
-      <div class="note">
-        When you add the real entry UI later, we’ll wire it to <code>/entry</code> and your Supabase tables.
+      <form id="login-form">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="login-email" class="form-control keyboard-input" placeholder="admin@nutritech.ai" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="login-password" class="form-control keyboard-input" placeholder="••••" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">
+          <span class="material-symbols-outlined">login</span>
+          Access Management
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="wrapper">
+    <div class="header">
+      <div class="title-section">
+        <div style="display: flex; gap: 1rem; align-items: center;">
+          <a href="/" class="back-link">
+            <span class="material-symbols-outlined" style="font-size: 1.2rem">arrow_back</span>
+            Back to Terminal
+          </a>
+          <a href="/dashboard" class="back-link" style="color: var(--accent);">
+            <span class="material-symbols-outlined" style="font-size: 1.2rem">dashboard</span>
+            Admin Dashboard
+          </a>
+        </div>
+        <h1 style="margin-top: 1rem;">Experiment Management</h1>
+        <p>Configure research protocols and manage tub-level telemetry.</p>
+      </div>
+      <button onclick="logout()" class="btn btn-outline" style="width: auto; padding: 0.5rem 1rem;">
+        <span class="material-symbols-outlined">logout</span>
+        LOGOUT
+      </button>
+    </div>
+
+    <div class="grid">
+      <!-- Left: Create/List -->
+      <div class="space-y" style="display: flex; flex-direction: column; gap: 2rem;">
+        <div class="card">
+          <div class="card-title">
+            <div class="icon"><span class="material-symbols-outlined">add_circle</span></div>
+            New Experiment
+          </div>
+          <form id="create-exp-form">
+            <div class="form-group">
+              <label>Experiment Title</label>
+              <input type="text" id="exp-title" class="form-control keyboard-input" placeholder="Enter title (Text only)" required>
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <input type="text" id="exp-desc" class="form-control keyboard-input" placeholder="Enter description (Text only)">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label>Number of Tubs</label>
+                <input type="number" id="exp-tubs" class="form-control" value="1" min="1" max="16">
+              </div>
+              <div class="form-group">
+                <label>Default Crop Type</label>
+                <input type="text" id="exp-crop" class="form-control keyboard-input" placeholder="Enter crop type (Text only)" required>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">
+              <span class="material-symbols-outlined">science</span>
+              Initialize Protocol
+            </button>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <div class="icon"><span class="material-symbols-outlined">assignment</span></div>
+            Existing Protocols
+          </div>
+          <div id="experiment-list" class="experiment-list">
+            <p style="color: var(--muted); font-size: 0.8rem; text-align: center;">Loading protocols...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Tub Details -->
+      <div class="card" id="detail-card" style="display: none;">
+        <div class="card-title">
+          <div class="icon"><span class="material-symbols-outlined">monitoring</span></div>
+          <span id="selected-title">Experiment Details</span>
+        </div>
+        <div id="tub-container" class="tub-list"></div>
       </div>
     </div>
   </div>
+
+  <!-- Custom Keyboard -->
+  <div id="keyboard-container">
+    <div style="max-width: 800px; margin: 0 auto; display: flex; justify-content: end; mb-2; margin-bottom: 10px;">
+      <button onclick="hideKeyboard()" style="background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 4px 12px; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer;">HIDE KEYBOARD</button>
+    </div>
+    <div class="keyboard-grid" id="keyboard-keys">
+      <!-- Keys injected by JS -->
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = '/api';
+    let currentExpId = null;
+    let activeInput = null;
+
+    // --- Authentication ---
+    function checkAuth() {
+      if (!localStorage.getItem('nt_token')) {
+        document.getElementById('auth-overlay').classList.remove('hidden');
+      } else {
+        document.getElementById('auth-overlay').classList.add('hidden');
+        fetchExperiments();
+      }
+    }
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      const btn = e.target.querySelector('button');
+      btn.disabled = true;
+      btn.textContent = 'Authenticating...';
+      
+      try {
+        const res = await fetch(`${API_BASE}/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (data.success) {
+          localStorage.setItem('nt_token', data.token);
+          checkAuth();
+        } else {
+          alert(data.message || 'Invalid credentials');
+        }
+      } catch (err) { alert('Connection failed'); }
+      finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined">login</span> Access Management';
+      }
+    });
+
+    function logout() {
+      localStorage.removeItem('nt_token');
+      location.reload();
+    }
+
+    // --- Custom Keyboard ---
+    const keys = [
+      '1','2','3','4','5','6','7','8','9','0',
+      'Q','W','E','R','T','Y','U','I','O','P',
+      'A','S','D','F','G','H','J','K','L','@',
+      'Z','X','C','V','B','N','M','.',',','/',
+      'SPACE', 'BACKSPACE', 'DONE'
+    ];
+
+    const kbContainer = document.getElementById('keyboard-container');
+    const kbGrid = document.getElementById('keyboard-keys');
+
+    keys.forEach(key => {
+      const btn = document.createElement('div');
+      btn.className = 'key';
+      if (key === 'SPACE') btn.className += ' extra-wide';
+      if (key === 'BACKSPACE' || key === 'DONE') btn.className += ' wide';
+      btn.textContent = key;
+      btn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!activeInput) return;
+        
+        if (key === 'BACKSPACE') {
+          activeInput.value = activeInput.value.slice(0, -1);
+        } else if (key === 'SPACE') {
+          activeInput.value += ' ';
+        } else if (key === 'DONE') {
+          kbContainer.classList.remove('visible');
+          activeInput.blur();
+          activeInput = null;
+        } else {
+          activeInput.value += key.toLowerCase();
+        }
+        activeInput.dispatchEvent(new Event('input', { bubbles: true }));
+        activeInput.dispatchEvent(new Event('change', { bubbles: true }));
+      };
+      kbGrid.appendChild(btn);
+    });
+
+    // Global listener for dynamic inputs
+    document.addEventListener('focusin', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        activeInput = e.target;
+        kbContainer.classList.add('visible');
+      }
+    });
+
+    // Toggle hide keyboard
+    function hideKeyboard() {
+      kbContainer.classList.remove('visible');
+      if (activeInput) activeInput.blur();
+      activeInput = null;
+    }
+
+    // --- Experiment Logic ---
+    async function fetchExperiments() {
+      try {
+        const res = await fetch(`${API_BASE}/experiments/`);
+        const data = await res.json();
+        const list = document.getElementById('experiment-list');
+        list.innerHTML = '';
+        if (!data.experiments || !data.experiments.length) {
+          list.innerHTML = '<p style="color: var(--muted); font-size: 0.8rem; text-align: center;">No protocols found.</p>';
+          return;
+        }
+        data.experiments.forEach(exp => {
+          const item = document.createElement('div');
+          item.className = `experiment-item ${currentExpId === exp.id ? 'active' : ''}`;
+          item.innerHTML = `
+            <div class="exp-info">
+              <h4>${exp.title}</h4>
+              <p>${exp.num_buckets} Tubs • ${exp.status}</p>
+            </div>
+            <span class="material-symbols-outlined" style="color: var(--muted)">chevron_right</span>
+          `;
+          item.onclick = () => showExperiment(exp.id);
+          list.appendChild(item);
+        });
+      } catch (err) { console.error(err); }
+    }
+
+    async function showExperiment(id) {
+      currentExpId = id;
+      document.querySelectorAll('.experiment-item').forEach(el => el.classList.remove('active'));
+      try {
+        const res = await fetch(`${API_BASE}/experiments/${id}/`);
+        const data = await res.json();
+        const exp = data.experiment;
+        document.getElementById('detail-card').style.display = 'block';
+        document.getElementById('selected-title').textContent = exp.title;
+        const tubList = document.getElementById('tub-container');
+        tubList.innerHTML = '';
+        exp.buckets.forEach(tub => {
+          const item = document.createElement('div');
+          item.className = 'tub-item';
+          item.innerHTML = `
+            <div class="tub-header">
+              <h5>Tub #${tub.bucket_number}</h5>
+              <span class="status-badge" id="status-${tub.id}">${tub.status}</span>
+            </div>
+            <div class="tub-input-grid">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>Soil Type</label>
+                <input type="text" class="form-control keyboard-input" value="${tub.soil_type}" onchange="updateTub(${tub.id}, 'soil_type', this.value)">
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>Plant Type</label>
+                <input type="text" class="form-control keyboard-input" value="${tub.plant_type}" onchange="updateTub(${tub.id}, 'plant_type', this.value)">
+              </div>
+            </div>
+            <div class="tub-actions">
+              <button class="action-btn btn-sense" onclick="handleAction(${tub.id}, 'sense')">SENSE</button>
+              <button class="action-btn btn-predict" onclick="handleAction(${tub.id}, 'predict')">PREDICT</button>
+            </div>
+            <div id="prediction-results-${tub.id}" style="margin-top: 1rem; display: none;">
+              <div style="display: flex; gap: 1rem; padding: 0.75rem; border-radius: 0.75rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border);">
+                <div style="flex: 1;"><div style="font-size: 0.6rem; color: var(--muted); font-weight: 800;">HEALTH</div><div style="font-size: 0.9rem; font-weight: 900; color: var(--accent3);" id="health-${tub.id}">—</div></div>
+                <div style="flex: 1;"><div style="font-size: 0.6rem; color: var(--muted); font-weight: 800;">STRESS</div><div style="font-size: 0.9rem; font-weight: 900; color: #f87171;" id="stress-${tub.id}">—</div></div>
+              </div>
+            </div>
+          `;
+          tubList.appendChild(item);
+        });
+        fetchExperiments();
+      } catch (err) { console.error(err); }
+    }
+
+    async function updateTub(tubId, field, value) {
+      const badge = document.getElementById(`status-${tubId}`);
+      const oldText = badge.textContent;
+      badge.textContent = 'SAVING...';
+      badge.style.opacity = '0.5';
+      try {
+        await fetch(`${API_BASE}/buckets/${tubId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ [field]: value })
+        });
+        badge.textContent = oldText;
+        badge.style.opacity = '1';
+      } catch (err) { 
+        console.error(err);
+        badge.textContent = 'ERROR';
+      }
+    }
+
+    async function handleAction(tubId, action) {
+      const badge = document.getElementById(`status-${tubId}`);
+      badge.textContent = action.toUpperCase() + 'ING...';
+      try {
+        const res = await fetch(`${API_BASE}/buckets/${tubId}/${action}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          badge.textContent = 'READY';
+          if (action === 'predict' && data.prediction) {
+            document.getElementById(`prediction-results-${tubId}`).style.display = 'block';
+            document.getElementById(`health-${tubId}`).textContent = (data.prediction.health_score * 100).toFixed(0) + '%';
+            document.getElementById(`stress-${tubId}`).textContent = (data.prediction.stress_index * 100).toFixed(0) + '%';
+          }
+        }
+      } catch (err) { badge.textContent = 'ERROR'; }
+    }
+
+    document.getElementById('create-exp-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        title: document.getElementById('exp-title').value,
+        description: document.getElementById('exp-desc').value,
+        num_buckets: parseInt(document.getElementById('exp-tubs').value),
+        crop_type: document.getElementById('exp-crop').value
+      };
+      try {
+        const res = await fetch(`${API_BASE}/experiments/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        for(let i=1; i<=payload.num_buckets; i++) {
+          await fetch(`${API_BASE}/experiments/${data.experiment.id}/buckets`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ bucket_number: i, soil_type: "Standard", plant_type: payload.crop_type })
+          });
+        }
+        e.target.reset();
+        fetchExperiments();
+        showExperiment(data.experiment.id);
+      } catch (err) { console.error(err); }
+    });
+
+    checkAuth();
+  </script>
 </body>
 </html>
-

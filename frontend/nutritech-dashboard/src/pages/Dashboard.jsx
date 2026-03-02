@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import API from "../services/api.js";
+import Navbar from "../components/Navbar";
 import ScoreComparisonChart from "../components/ScoreComparisonChart";
 import TimeseriesPanel from "../components/TimeseriesPanel";
 import PipelineControl from "../components/PipelineControl";
@@ -154,8 +155,9 @@ function TubCard({ tub, onClick, selected }) {
 }
 
 export default function Dashboard() {
+  const { id } = useParams();
   const [experiments, setExperiments] = useState([]);
-  const [selectedExp, setSelectedExp] = useState(null);
+  const [selectedExp, setSelectedExp] = useState(id || null);
   const [summary, setSummary] = useState([]);
   const [selectedTub, setSelectedTub] = useState(null);
   const [tab, setTab] = useState("Overview");
@@ -169,10 +171,14 @@ export default function Dashboard() {
       .then((res) => {
         const exps = res.data.data || [];
         setExperiments(exps);
-        if (exps.length) setSelectedExp(exps[0].id);
+        if (id) {
+          setSelectedExp(id);
+        } else if (exps.length) {
+          setSelectedExp(exps[0].id);
+        }
       })
       .catch((e) => setError(e.message));
-  }, []);
+  }, [id]);
 
   // Load summary when experiment changes
   const loadSummary = useCallback(() => {
@@ -210,81 +216,26 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background-dark text-slate-100 flex flex-col">
-      {/* Header from Stitch-style layout */}
-      <header className="flex items-center justify-between border-b border-slate-800 px-6 md:px-10 py-4 bg-background-dark/80 backdrop-blur-md sticky top-0 z-40">
-        <div className="flex items-center gap-3">
-          <div className="bg-cyan-500/15 p-2 rounded-lg border border-cyan-500/30">
-            <span className="material-symbols-outlined text-cyan-300 text-2xl">
-              monitoring
-            </span>
-          </div>
-          <div>
-            <h1 className="text-lg md:text-xl font-black tracking-tight font-display">
-              nutritech{" "}
-              <span className="text-cyan-400 text-sm md:text-base font-semibold">
-                Dashboard
-              </span>
-            </h1>
-            <p className="text-[0.7rem] text-slate-500 uppercase tracking-[0.18em]">
-              Experimental tub monitoring
-            </p>
-          </div>
-        </div>
+      <Navbar 
+        selectedExp={selectedExp} 
+        experiments={experiments} 
+        onExpChange={(id) => {
+          setSelectedExp(id);
+          setSelectedTub(null);
+        }} 
+      />
 
-        <nav className="flex items-center gap-3 text-xs">
-          <Link
-            to="/dashboard/experiments"
-            className="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-700 text-slate-300 hover:border-cyan-400/60 hover:text-cyan-300 transition-colors"
-          >
-            <span className="material-symbols-outlined text-sm">
-              arrow_back
-            </span>
-            Experiments
-          </Link>
-
-          <select
-            value={selectedExp || ""}
-            onChange={(e) => {
-              setSelectedExp(Number(e.target.value));
-              setSelectedTub(null);
-            }}
-            className="bg-slate-900/60 border border-slate-700 text-xs rounded-lg px-2 py-1 text-slate-100 focus:outline-none focus:ring-1 focus:ring-cyan-400"
-          >
-            {experiments.map((ex) => (
-              <option key={ex.id} value={ex.id}>
-                {ex.title || `Experiment ${ex.id}`}
-              </option>
-            ))}
-          </select>
-
-          <div className="hidden md:flex items-center gap-2 ml-2">
-            <div className="flex flex-col items-end">
-              <span className="text-[0.65rem] font-semibold">
-                Admin Console
-              </span>
-              <span className="text-[0.55rem] text-cyan-400 uppercase tracking-[0.2em]">
-                Live
-              </span>
-            </div>
-            <div className="size-8 rounded-full bg-slate-900 border border-cyan-500/40 flex items-center justify-center">
-              <span className="text-xs text-cyan-300 font-bold">NT</span>
-            </div>
-          </div>
-        </nav>
-      </header>
-
-      {/* Main content */}
-      <main className="flex-1 px-6 md:px-10 py-6 max-w-7xl mx-auto w-full">
+      <main className="flex-1 p-6 md:p-10 max-w-[1600px] mx-auto w-full">
         <Link 
           to="/dashboard/experiments" 
-          className="inline-flex items-center gap-1.5 text-[0.65rem] font-bold text-slate-500 hover:text-cyan-400 transition-colors uppercase tracking-widest mb-4"
+          className="inline-flex items-center gap-1.5 text-[0.65rem] font-bold text-slate-500 hover:text-cyan-400 transition-colors uppercase tracking-widest mb-6"
         >
           <span className="material-symbols-outlined text-[0.8rem]">arrow_back</span>
           Back to Experiments
         </Link>
 
-        {/* View Toggle (as in screenshot) */}
-        <div className="flex gap-1 p-1 bg-slate-900/60 rounded-xl border border-slate-800/40 w-fit mb-8 shadow-sm">
+        {/* View Toggle */}
+        <div className="flex gap-1.5 p-1 bg-slate-900/60 rounded-xl border border-slate-800/40 w-fit mb-8 shadow-sm">
           {["Combined View", "Individual Tub View"].map((v) => (
             <button
               key={v}
@@ -312,23 +263,36 @@ export default function Dashboard() {
             </p>
           </div>
 
-          <div className="flex gap-3">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-700">
-              <div className="size-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs font-medium">System Online</span>
+          <div className="flex gap-3 items-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/50 text-xs text-slate-400">
+              <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+              System Online
             </div>
             <button
-              type="button"
               onClick={loadSummary}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-cyan-500/60 text-cyan-300 hover:bg-cyan-500/10 text-xs font-semibold transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-900/50 text-xs text-slate-300 hover:border-cyan-500/50 hover:text-cyan-400 transition-all active:scale-95 shadow-sm"
             >
-              <span className="material-symbols-outlined text-sm">
-                refresh
-              </span>
+              <span className="material-symbols-outlined text-sm">sync</span>
               Sync
             </button>
           </div>
         </div>
+
+        {summary.length === 0 && !loading && (
+          <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-16 text-center mb-12">
+            <div className="size-16 rounded-full bg-slate-800 flex items-center justify-center mx-auto mb-4">
+              <span className="material-symbols-outlined text-3xl text-slate-500">science</span>
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">No data for this experiment</h3>
+            <p className="text-slate-400 max-w-sm mx-auto mb-8 text-sm">
+              We couldn't find any tub telemetry for this protocol. Initialize buckets in the Admin Console to begin tracking.
+            </p>
+            <a href="/entry" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-cyan-500 text-slate-950 font-black text-xs uppercase tracking-widest hover:bg-cyan-400 transition-all active:scale-95 shadow-lg shadow-cyan-500/20">
+              <span className="material-symbols-outlined text-base">add_circle</span>
+              Configure Experiment
+            </a>
+          </div>
+        )}
 
         {/* Metrics row */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

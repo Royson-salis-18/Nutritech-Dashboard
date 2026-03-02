@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react" ; 
 import { Link } from "react-router-dom";
 import API from "../services/api.js"; 
+import Navbar from "../components/Navbar";
 
 function Home(){
     const [tubs, setTubs] = useState([]);
@@ -23,20 +24,14 @@ function Home(){
     };
 
     return (
-        <div className="min-h-screen bg-background-dark text-slate-100 p-6 md:p-10">
-            <Link 
-                to="/dashboard/experiments" 
-                className="inline-flex items-center gap-1.5 text-[0.65rem] font-bold text-slate-500 hover:text-cyan-400 transition-colors uppercase tracking-widest mb-6"
-            >
-                <span className="material-symbols-outlined text-[0.8rem]">arrow_back</span>
-                Back to Experiments
-            </Link>
+        <div className="min-h-screen bg-background-dark text-slate-100 flex flex-col">
+            <Navbar />
 
-            <div className="space-y-8">
+            <div className="flex-1 p-6 md:p-10 max-w-[1600px] mx-auto w-full space-y-8">
             {/* Header Section */}
             <div className="flex justify-between items-end">
                 <div>
-                    <h2 className="text-4xl font-black tracking-tight">
+                    <h2 className="text-4xl font-black tracking-tight font-display">
                         Active Tubs
                     </h2>
                     <p className="text-slate-400">
@@ -44,12 +39,19 @@ function Home(){
                     </p>
                 </div>
 
-                <button
-                    onClick={fetchTubs}
-                    className="px-4 py-2 rounded-xl border border-primary text-primary hover:bg-primary/10"
-                >
-                    Sync
-                </button>
+                <div className="flex gap-3 items-center">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/50 text-xs text-slate-400">
+                        <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+                        System Online
+                    </div>
+                    <button
+                        onClick={fetchTubs}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-900/50 text-xs text-slate-300 hover:border-cyan-500/50 hover:text-cyan-400 transition-all active:scale-95"
+                    >
+                        <span className="material-symbols-outlined text-sm">sync</span>
+                        Sync
+                    </button>
+                </div>
             </div>
 
             {/* Loading */}

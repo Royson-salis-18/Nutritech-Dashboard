@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import API from "../services/api.js";
+import Navbar from "../components/Navbar";
 
 function statusChip(status) {
   const normalized = (status || "").toLowerCase();
@@ -51,79 +52,9 @@ export default function Experiments() {
 
   return (
     <div className="min-h-screen bg-background-dark text-slate-100 flex flex-col">
-      {/* Header shared with tubs view */}
-      <header className="flex items-center justify-between border-b border-slate-800 px-6 md:px-10 py-4 bg-background-dark/80 backdrop-blur-md sticky top-0 z-40">
-        <div className="flex items-center gap-3">
-          <div className="bg-cyan-500/15 p-2 rounded-lg border border-cyan-500/30">
-            <span className="material-symbols-outlined text-cyan-300 text-2xl">
-              monitoring
-            </span>
-          </div>
-          <div>
-            <h1 className="text-lg md:text-xl font-black tracking-tight font-display">
-              nutritech{" "}
-              <span className="text-cyan-400 text-sm md:text-base font-semibold">
-                Dashboard
-              </span>
-            </h1>
-            <p className="text-[0.7rem] text-slate-500 uppercase tracking-[0.18em]">
-              Experimental protocol overview
-            </p>
-          </div>
-        </div>
+      <Navbar />
 
-        <nav className="flex items-center gap-2 text-xs">
-          <Link
-            to="/dashboard/tubs"
-            className={[
-              "px-3 py-1.5 rounded-full border text-xs font-semibold tracking-wide",
-              location.pathname.startsWith("/dashboard/tubs")
-                ? "bg-slate-100 text-slate-900 border-slate-100"
-                : "bg-slate-900/60 text-slate-200 border-slate-700 hover:border-cyan-400/60 hover:text-cyan-300",
-            ].join(" ")}
-          >
-            Tubs
-          </Link>
-          <Link
-            to="/dashboard/experiments"
-            className={[
-              "px-3 py-1.5 rounded-full border text-xs font-semibold tracking-wide",
-              location.pathname.startsWith("/dashboard/experiments") ||
-              location.pathname === "/dashboard"
-                ? "bg-emerald-400 text-slate-900 border-emerald-400"
-                : "bg-slate-900/60 text-slate-200 border-slate-700 hover:border-emerald-400/80 hover:text-emerald-300",
-            ].join(" ")}
-          >
-            Experiments
-          </Link>
-
-          <a
-            href="/"
-            className="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-700 text-slate-300 hover:border-cyan-400/60 hover:text-cyan-300 transition-colors ml-2"
-          >
-            <span className="material-symbols-outlined text-sm">
-              arrow_back
-            </span>
-            Landing
-          </a>
-
-          <div className="hidden md:flex items-center gap-2 ml-2">
-            <div className="flex flex-col items-end">
-              <span className="text-[0.65rem] font-semibold">
-                Admin User
-              </span>
-              <span className="text-[0.55rem] text-cyan-400 uppercase tracking-[0.2em]">
-                Kiosk Mode
-              </span>
-            </div>
-            <div className="size-8 rounded-full bg-slate-900 border border-cyan-500/40 flex items-center justify-center">
-              <span className="text-xs text-cyan-300 font-bold">NT</span>
-            </div>
-          </div>
-        </nav>
-      </header>
-
-      <main className="flex-1 px-6 md:px-10 py-6 max-w-7xl mx-auto w-full">
+      <main className="flex-1 p-6 md:p-10 max-w-[1600px] mx-auto w-full">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
           <div className="space-y-1">
             <h2 className="text-3xl md:text-4xl font-black tracking-tight font-display">
@@ -135,13 +66,19 @@ export default function Experiments() {
           </div>
 
           <div className="flex gap-3 items-center">
-            <button
-              type="button"
-              disabled
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-700 text-xs text-slate-400 cursor-default"
-            >
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/50 text-xs text-slate-400">
               <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
               System Online
+            </div>
+            <button
+              onClick={() => {
+                setLoading(true);
+                API.get("/experiments/").then(res => setExperiments(res.data.data || [])).finally(() => setLoading(false));
+              }}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-900/50 text-xs text-slate-300 hover:border-cyan-500/50 hover:text-cyan-400 transition-all active:scale-95"
+            >
+              <span className="material-symbols-outlined text-sm">sync</span>
+              Sync
             </button>
           </div>
         </div>
