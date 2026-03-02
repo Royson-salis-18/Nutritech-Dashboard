@@ -1,30 +1,55 @@
--- Create experiments and tubs tables in public schema
+-- Professional Database Schema for NutriTech
 -- Run this in Supabase SQL Editor
 
-CREATE TABLE IF NOT EXISTS experiments (
+-- 1. Create the 'experiment' schema
+CREATE SCHEMA IF NOT EXISTS experiment;
+
+-- 2. Create experiments table
+CREATE TABLE IF NOT EXISTS experiment.experiments (
     id SERIAL PRIMARY KEY,
     title TEXT NOT NULL,
     description TEXT,
-    num_buckets INTEGER DEFAULT 1,
-    crop_type TEXT,
+    started_at TIMESTAMPTZ DEFAULT NOW(),
+    ended_at TIMESTAMPTZ,
     status TEXT DEFAULT 'Active',
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS tubs (
+-- 3. Create tubs table
+CREATE TABLE IF NOT EXISTS experiment.tubs (
     id SERIAL PRIMARY KEY,
-    experiment_id INTEGER REFERENCES experiments(id) ON DELETE CASCADE,
-    bucket_number INTEGER,
+    label TEXT,
+    experiment_id INTEGER REFERENCES experiment.experiments(id) ON DELETE CASCADE,
     soil_type TEXT DEFAULT 'Standard',
-    plant_type TEXT,
+    plant_name TEXT,
+    growth_rate TEXT DEFAULT 'Stable',
     status TEXT DEFAULT 'Ready',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 4. Create computed_scores table
+CREATE TABLE IF NOT EXISTS experiment.computed_scores (
+    id SERIAL PRIMARY KEY,
+    tub_id INTEGER REFERENCES experiment.tubs(id) ON DELETE CASCADE,
+    experiment_id INTEGER REFERENCES experiment.experiments(id) ON DELETE CASCADE,
+    timestamp TIMESTAMPTZ DEFAULT NOW(),
+    health_t FLOAT8 DEFAULT 0.8,
+    stress_t FLOAT8 DEFAULT 0.1,
+    risk_t FLOAT8 DEFAULT 0.05,
+    pred_health_t FLOAT8,
+    pred_stress_t FLOAT8,
+    pred_risk_t FLOAT8,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Enable RLS (optional, but good practice for Supabase)
-ALTER TABLE experiments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tubs ENABLE ROW LEVEL SECURITY;
+-- Enable RLS for security
+ALTER TABLE experiment.experiments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE experiment.tubs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE experiment.computed_scores ENABLE ROW LEVEL SECURITY;
 
--- Create permissive policies for now (since we use service key or anon key)
-CREATE POLICY "Allow all on experiments" ON experiments FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all on tubs" ON tubs FOR ALL USING (true) WITH CHECK (true);
+-- Permissive policies for development
+CREATE POLICY "Allow all on experiments" ON experiment.experiments FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on tubs" ON experiment.tubs FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on computed_scores" ON experiment.computed_scores FOR ALL USING (true) WITH CHECK (true);

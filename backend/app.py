@@ -111,9 +111,8 @@ def create_app():
         """
         exp_id = request.args.get("experiment_id")
         if not exp_id:
-            # Return global stats if no exp_id provided (fallback for other components)
             try:
-                exps = supabase.table("experiments").select("status").execute().data
+                exps = supabase.schema("experiment").table("experiments").select("status").execute().data
                 return jsonify({
                     "success": True,
                     "data": {
@@ -126,13 +125,13 @@ def create_app():
                 return jsonify({"success": True, "data": {"total_ongoing": 0, "total_experiments": 0, "archived": 0}}), 200
 
         try:
-            # 1. Fetch all tubs for this experiment
-            tubs_res = supabase.table("tubs").select("*").eq("experiment_id", exp_id).execute()
+            # 1. Fetch all tubs for this experiment from 'experiment' schema
+            tubs_res = supabase.schema("experiment").table("tubs").select("*").eq("experiment_id", exp_id).execute()
             tubs = tubs_res.data
             
             summary_data = []
             for tub in tubs:
-                # 2. Fetch latest telemetry for each tub
+                # 2. Fetch latest telemetry from 'public' schema
                 sensor_id = f"sensor_{tub['id']}"
                 telemetry = supabase.table("sensor_data") \
                     .select("*") \
@@ -143,22 +142,26 @@ def create_app():
                 
                 latest = telemetry.data[0] if telemetry.data else {}
                 
-                # Mock scoring logic (replace with real formulas if needed)
-                h = 0.85 if latest.get("soil_moisture", 0) > 30 else 0.42
-                s = 0.12 if latest.get("soil_ph", 7) > 6 else 0.55
-                r = 0.05 if h > 0.7 else 0.48
+                # 3. Fetch real computed scores from 'experiment' schema
+                scores_res = supabase.schema("experiment").table("computed_scores") \
+                    .select("*") \
+                    .eq("tub_id", tub['id']) \
+                    .order("timestamp", desc=True) \
+                    .limit(1) \
+                    .execute()
+                latest_scores = scores_res.data[0] if scores_res.data else {}
 
                 summary_data.append({
                     "tub_id": tub["id"],
-                    "tub_label": f"Tub {tub['bucket_number']}",
-                    "plant_name": tub["plant_type"],
-                    "soil_type": tub["soil_type"],
-                    "health_t": h,
-                    "stress_t": s,
-                    "risk_t": r,
-                    "pred_health_t": h + 0.05, # mock prediction
-                    "pred_stress_t": s - 0.02,
-                    "pred_risk_t": r,
+                    "tub_label": tub.get("label", f"Tub {tub['id']}"),
+                    "plant_name": tub.get("plant_name"),
+                    "soil_type": tub.get("soil_type"),
+                    "health_t": latest_scores.get("health_t", 0.8),
+                    "stress_t": latest_scores.get("stress_t", 0.1),
+                    "risk_t": latest_scores.get("risk_t", 0.05),
+                    "pred_health_t": latest_scores.get("pred_health_t"),
+                    "pred_stress_t": latest_scores.get("pred_stress_t"),
+                    "pred_risk_t": latest_scores.get("pred_risk_t"),
                     "timestamp": latest.get("created_at", datetime.utcnow().isoformat())
                 })
                 
@@ -171,41 +174,38 @@ def create_app():
     def get_all_tubs():
         """Fetch all tubs for the dashboard"""
         try:
-            res = supabase.table("tubs").select("*").execute()
+            res = supabase.schema("experiment").table("tubs").select("*").execute()
             all_tubs = []
             for b in res.data:
                 all_tubs.append({
                     "id": b["id"],
-                    "label": f"Tub {b['bucket_number']}",
-                    "soil_type": b["soil_type"],
-                    "plant_name": b["plant_type"],
-                    "growth_rate": "Stable"
+                    "label": b.get("label", f"Tub {b['id']}"),
+                    "soil_type": b.get("soil_type"),
+                    "plant_name": b.get("plant_name"),
+                    "growth_rate": b.get("growth_rate", "Stable")
                 })
             return jsonify({"success": True, "data": all_tubs}), 200
         except:
             return jsonify({"success": True, "data": []}), 200
 
     # --- EXPERIMENTS API ---
-    # Linked to live Supabase tables
+    # Linked to professional 'experiment' schema tables
 
     @app.route("/api/experiments/", methods=["GET"])
     def get_experiments():
         try:
-            # In reality, you'd use a real 'experiments' table. 
-            # For now, we fetch from the public schema if available, else return our tracker.
-            res = supabase.table("experiments").select("*, tubs(*)").order("created_at", desc=True).execute()
+            res = supabase.schema("experiment").table("experiments").select("*, tubs(*)").order("started_at", desc=True).execute()
             data = res.data
             for exp in data:
                 exp["buckets"] = exp.get("tubs", [])
             return jsonify({"success": True, "experiments": data, "data": data}), 200
         except Exception as e:
-            # Fallback to empty list if table doesn't exist yet
             return jsonify({"success": True, "experiments": [], "data": []}), 200
 
     @app.route("/api/experiments/<int:id>/", methods=["GET"])
     def get_experiment(id):
         try:
-            res = supabase.table("experiments").select("*, tubs(*)").eq("id", id).single().execute()
+            res = supabase.schema("experiment").table("experiments").select("*, tubs(*)").eq("id", id).single().execute()
             exp = res.data
             if not exp:
                 return jsonify({"success": False, "message": "Experiment not found"}), 404
@@ -218,12 +218,11 @@ def create_app():
     def create_experiment():
         data = request.json
         try:
-            res = supabase.table("experiments").insert({
+            res = supabase.schema("experiment").table("experiments").insert({
                 "title": data.get("title"),
                 "description": data.get("description"),
-                "num_buckets": data.get("num_buckets", 1),
-                "crop_type": data.get("crop_type"),
-                "status": "Active"
+                "status": "Active",
+                "started_at": datetime.utcnow().isoformat()
             }).execute()
             return jsonify({"success": True, "experiment": res.data[0]}), 201
         except Exception as e:
@@ -233,12 +232,13 @@ def create_app():
     def create_bucket(experiment_id):
         data = request.json
         try:
-            res = supabase.table("tubs").insert({
+            res = supabase.schema("experiment").table("tubs").insert({
                 "experiment_id": experiment_id,
-                "bucket_number": data.get("bucket_number"),
+                "label": f"Tub {data.get('bucket_number')}",
                 "soil_type": data.get("soil_type", "Standard"),
-                "plant_type": data.get("plant_type"),
-                "status": "Ready"
+                "plant_name": data.get("plant_type"),
+                "status": "Ready",
+                "growth_rate": "Stable"
             }).execute()
             return jsonify({"success": True, "bucket": res.data[0]}), 201
         except Exception as e:
@@ -248,8 +248,7 @@ def create_app():
     def update_bucket(id):
         data = request.json
         try:
-            # Map frontend 'plant_type' to db if different, or just update directly
-            res = supabase.table("tubs").update(data).eq("id", id).execute()
+            res = supabase.schema("experiment").table("tubs").update(data).eq("id", id).execute()
             return jsonify({"success": True, "bucket": res.data[0]}), 200
         except Exception as e:
             return jsonify({"success": False, "message": str(e)}), 400
@@ -262,10 +261,10 @@ def create_app():
                 "sensor_id": sensor_id,
                 "tub_id": id,
                 "is_active": True,
-                "last_sensed_at": datetime.utcnow().isoformat()
+                "last_seen": datetime.utcnow().isoformat()
             }).execute()
             
-            supabase.table("tubs").update({"status": "Sensing..."}).eq("id", id).execute()
+            supabase.schema("experiment").table("tubs").update({"status": "Sensing..."}).eq("id", id).execute()
             return jsonify({"success": True, "message": f"Sensing triggered for {sensor_id}"}), 200
         except Exception as e:
             return jsonify({"success": False, "message": str(e)}), 400
@@ -277,13 +276,13 @@ def create_app():
         Fetches the most recent sensor data for this tub and calls the cloud ML model.
         """
         try:
-            # 1. Fetch tub info from Supabase
-            tub_res = supabase.table("tubs").select("*").eq("id", id).single().execute()
+            # 1. Fetch tub info from 'experiment' schema
+            tub_res = supabase.schema("experiment").table("tubs").select("*").eq("id", id).single().execute()
             tub = tub_res.data
             if not tub:
                 return jsonify({"success": False, "message": "Bucket not found"}), 404
 
-            # 2. Fetch recent sensor data
+            # 2. Fetch recent sensor data from 'public' schema
             sensor_id = f"sensor_{id}"
             recent_data = supabase.table("sensor_data") \
                 .select("*") \
@@ -300,7 +299,7 @@ def create_app():
 
             latest_reading = recent_data.data[0]
 
-            # 3. Mock ML response (replace with real call if needed)
+            # 3. Mock ML response for UI update (replace with real call if needed)
             h = 0.95 if latest_reading.get("soil_moisture", 0) > 30 else 0.45
             s = 0.05 if latest_reading.get("soil_ph", 7) > 6 else 0.62
 
@@ -311,8 +310,8 @@ def create_app():
                 "data_source_id": latest_reading.get("id")
             }
 
-            # Update status in DB
-            supabase.table("tubs").update({"status": "Prediction Ready"}).eq("id", id).execute()
+            # Update status in 'experiment' DB
+            supabase.schema("experiment").table("tubs").update({"status": "Prediction Ready"}).eq("id", id).execute()
 
             return jsonify({
                 "success": True, 
@@ -325,14 +324,13 @@ def create_app():
 
     @app.route("/api/dashboard/tub/<int:id>/timeseries", methods=["GET"])
     def get_tub_timeseries(id):
-        """Fetch timeseries data for a specific tub"""
+        """Fetch timeseries data for a specific tub from the 'experiment' schema"""
         try:
-            # 1. Fetch sensor data for this tub
-            sensor_id = f"sensor_{id}"
-            res = supabase.table("sensor_data") \
+            # 1. Fetch scores from computed_scores in 'experiment' schema
+            res = supabase.schema("experiment").table("computed_scores") \
                 .select("*") \
-                .eq("sensor_id", sensor_id) \
-                .order("created_at", desc=True) \
+                .eq("tub_id", id) \
+                .order("timestamp", desc=True) \
                 .limit(100) \
                 .execute()
             
@@ -341,19 +339,14 @@ def create_app():
             quality = []
             
             for d in data:
-                # Mock scoring for each history point
-                h = 0.85 if d.get("soil_moisture", 0) > 30 else 0.42
-                s = 0.12 if d.get("soil_ph", 7) > 6 else 0.55
-                r = 0.05 if h > 0.7 else 0.48
-                
                 scores.append({
-                    "timestamp": d.get("created_at"),
-                    "health_t": h,
-                    "stress_t": s,
-                    "risk_t": r,
-                    "pred_health_t": h + 0.02,
-                    "pred_stress_t": s - 0.01,
-                    "pred_risk_t": r
+                    "timestamp": d.get("timestamp"),
+                    "health_t": d.get("health_t"),
+                    "stress_t": d.get("stress_t"),
+                    "risk_t": d.get("risk_t"),
+                    "pred_health_t": d.get("pred_health_t"),
+                    "pred_stress_t": d.get("pred_stress_t"),
+                    "pred_risk_t": d.get("pred_risk_t")
                 })
                 
                 quality.append({
