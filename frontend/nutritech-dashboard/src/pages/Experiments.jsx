@@ -43,11 +43,15 @@ export default function Experiments() {
 
   const fetchExperiments = useCallback(() => {
     setLoading(true);
+    setError(null);
     API.get("/experiments/")
       .then((res) => {
         setExperiments(res.data.data || []);
       })
-      .catch((e) => setError(e.message))
+      .catch((e) => {
+        console.error("Fetch error:", e);
+        setError(e.response?.data?.message || e.message);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -57,6 +61,11 @@ export default function Experiments() {
 
   const handleNext = () => {
     if (step === 1) {
+      if (!formData.title.trim()) {
+        setError("Please enter an experiment title");
+        return;
+      }
+      setError(null);
       const count = parseInt(formData.num_buckets) || 1;
       const initialTubs = Array.from({ length: count }, (_, i) => ({
         bucket_number: i + 1,
@@ -70,12 +79,23 @@ export default function Experiments() {
 
   const handleCreate = async () => {
     setLoading(true);
+    setError(null);
     try {
+      // 1. Create the experiment
       const expRes = await API.post("/experiments/", formData);
+      
+      if (!expRes.data.success) {
+        throw new Error(expRes.data.message || "Failed to create experiment");
+      }
+
       const expId = expRes.data.experiment.id;
       
+      // 2. Create all tubs/buckets
       for (const tub of tubs) {
-        await API.post(`/experiments/${expId}/buckets`, tub);
+        const tubRes = await API.post(`/experiments/${expId}/buckets`, tub);
+        if (!tubRes.data.success) {
+          throw new Error(tubRes.data.message || `Failed to create tub ${tub.bucket_number}`);
+        }
       }
       
       setShowAddModal(false);
@@ -83,7 +103,8 @@ export default function Experiments() {
       setFormData({ title: "", description: "", num_buckets: 1 });
       fetchExperiments();
     } catch (e) {
-      setError(e.message);
+      console.error("Create error:", e);
+      setError(e.response?.data?.message || e.message);
     } finally {
       setLoading(false);
     }
@@ -188,7 +209,7 @@ export default function Experiments() {
           </div>
         </div>
 
-        {error && (
+        {error && !showAddModal && (
           <div className="mb-4 rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
             ⚠ {error}
           </div>
@@ -208,6 +229,11 @@ export default function Experiments() {
               </div>
 
               <div className="p-6">
+                {error && (
+                  <div className="mb-4 rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200 animate-in fade-in slide-in-from-top-1">
+                    ⚠ {error}
+                  </div>
+                )}
                 {step === 1 ? (
                   <div className="space-y-4">
                     <div className="space-y-1">

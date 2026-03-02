@@ -227,6 +227,7 @@ def create_app():
     @app.route("/api/experiments/", methods=["POST"])
     def create_experiment():
         data = request.json
+        print(f"Creating experiment with data: {data}")
         try:
             res = supabase.schema("experiment").table("experiments").insert({
                 "title": data.get("title"),
@@ -234,24 +235,37 @@ def create_app():
                 "status": "Active",
                 "started_at": datetime.utcnow().isoformat()
             }).execute()
+            
+            if not res.data:
+                print(f"Supabase returned no data for experiment creation. Response: {res}")
+                return jsonify({"success": False, "message": "Failed to create experiment in Supabase"}), 500
+                
             return jsonify({"success": True, "experiment": res.data[0]}), 201
         except Exception as e:
+            print(f"Experiment Creation Error: {str(e)}")
             return jsonify({"success": False, "message": str(e)}), 400
 
     @app.route("/api/experiments/<int:experiment_id>/buckets", methods=["POST"])
     def create_bucket(experiment_id):
         data = request.json
+        print(f"Creating tub for experiment {experiment_id} with data: {data}")
         try:
             res = supabase.schema("experiment").table("tubs").insert({
                 "experiment_id": experiment_id,
                 "label": f"Tub {data.get('bucket_number')}",
                 "soil_type": data.get("soil_type", "Standard"),
-                "plant_name": data.get("plant_type"),
+                "plant_name": data.get("plant_type") or data.get("plant_name"),
                 "status": "Ready",
                 "growth_rate": "Stable"
             }).execute()
+            
+            if not res.data:
+                print(f"Supabase returned no data for tub creation. Response: {res}")
+                return jsonify({"success": False, "message": "Failed to create tub in Supabase"}), 500
+
             return jsonify({"success": True, "bucket": res.data[0]}), 201
         except Exception as e:
+            print(f"Tub Creation Error: {str(e)}")
             return jsonify({"success": False, "message": str(e)}), 400
 
     @app.route("/api/buckets/<int:id>", methods=["PATCH"])
