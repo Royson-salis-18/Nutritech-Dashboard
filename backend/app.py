@@ -11,7 +11,7 @@ from routes.dashboard import dashboard_bp
 logging.basicConfig(level=logging.INFO)
 
 # Paths
-BASE_DIR    = os.path.dirname(__file__)
+BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
 LANDING_DIR = os.path.join(BASE_DIR, "..", "landing")
 REACT_DIR   = os.path.join(BASE_DIR, "..", "frontend", "nutritech-dashboard", "dist")
 
