@@ -70,7 +70,7 @@ def _compute_stdev_bounds(rows: list[dict]) -> dict[str, tuple[float, float] | N
     return bounds
 
 
-def clean_batch(rows: list[dict[str, Any]]) -> tuple[list[dict], dict]:
+def clean_batch(rows: list[dict[str, Any]], use_math_cleaning: bool = True) -> tuple[list[dict], dict]:
     """
     Clean a batch of enriched sensor rows.
     Returns (cleaned_rows, report).
@@ -122,20 +122,24 @@ def clean_batch(rows: list[dict[str, Any]]) -> tuple[list[dict], dict]:
                     report["nulls_filled"] += 1
 
     # 4. Flag outliers (>3σ) — keep row but add flag
-    bounds = _compute_stdev_bounds(valid)
-    for r in valid:
-        flagged_cols = []
-        for col, bound in bounds.items():
-            if bound is None:
-                continue
-            v = r.get(col)
-            if v is None:
-                continue
-            lo, hi = bound
-            if v < lo or v > hi:
-                flagged_cols.append(col)
-                report["outliers_flagged"] += 1
-        r["_outlier_cols"] = flagged_cols
+    if use_math_cleaning:
+        bounds = _compute_stdev_bounds(valid)
+        for r in valid:
+            flagged_cols = []
+            for col, bound in bounds.items():
+                if bound is None:
+                    continue
+                v = r.get(col)
+                if v is None:
+                    continue
+                lo, hi = bound
+                if v < lo or v > hi:
+                    flagged_cols.append(col)
+                    report["outliers_flagged"] += 1
+            r["_outlier_cols"] = flagged_cols
+    else:
+        for r in valid:
+            r["_outlier_cols"] = []
 
     report["output_rows"] = len(valid)
     logger.info(

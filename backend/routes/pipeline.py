@@ -26,6 +26,7 @@ def run_pipeline():
     body = request.get_json(silent=True) or {}
     experiment_id = body.get("experiment_id")
     retrain = body.get("retrain", False)
+    use_math_cleaning = body.get("use_math_cleaning", True)
 
     if not experiment_id:
         return jsonify({"status": "error", "message": "experiment_id is required"}), 400
@@ -51,7 +52,7 @@ def run_pipeline():
             return jsonify(result)
 
         # ── Step 2: Clean ──────────────────────────────────────────────────────
-        cleaned, cleaning_report = clean_batch(raw_rows)
+        cleaned, cleaning_report = clean_batch(raw_rows, use_math_cleaning=use_math_cleaning)
 
         if not cleaned:
             return jsonify({

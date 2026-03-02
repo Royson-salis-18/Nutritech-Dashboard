@@ -10,6 +10,7 @@ export default function PipelineControl({ experimentId, onComplete }) {
     const [running, setRunning] = useState(false);
     const [lastResult, setLastResult] = useState(null);
     const [retrain, setRetrain] = useState(false);
+    const [useMathCleaning, setUseMathCleaning] = useState(true);
     const [error, setError] = useState(null);
 
     // Load last pipeline status on mount
@@ -24,7 +25,11 @@ export default function PipelineControl({ experimentId, onComplete }) {
         setRunning(true);
         setError(null);
         try {
-            const res = await API.post("/pipeline/run", { experiment_id: experimentId, retrain });
+            const res = await API.post("/pipeline/run", { 
+                experiment_id: experimentId, 
+                retrain,
+                use_math_cleaning: useMathCleaning
+            });
             setLastResult(res.data);
             setStatus(res.data);
             if (onComplete) onComplete();
@@ -49,7 +54,7 @@ export default function PipelineControl({ experimentId, onComplete }) {
                     and writes everything back to Supabase.
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 24, marginBottom: 20 }}>
                     <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.82rem", color: "#94a3b8", cursor: "pointer" }}>
                         <input
                             type="checkbox"
@@ -58,6 +63,16 @@ export default function PipelineControl({ experimentId, onComplete }) {
                             style={{ accentColor: "#22d3ee", width: 14, height: 14 }}
                         />
                         Force retrain ML models
+                    </label>
+
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.82rem", color: "#94a3b8", cursor: "pointer" }}>
+                        <input
+                            type="checkbox"
+                            checked={useMathCleaning}
+                            onChange={e => setUseMathCleaning(e.target.checked)}
+                            style={{ accentColor: "#34d399", width: 14, height: 14 }}
+                        />
+                        Apply Math-based cleaning
                     </label>
                 </div>
 
