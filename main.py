@@ -23,6 +23,11 @@ def assets(filename: str):
     return send_from_directory(ASSETS_DIR, filename)
 
 
+@app.route("/login")
+def login_page():
+    return send_from_directory(LANDING_DIR, "login.html")
+
+
 @app.route("/api/health")
 def health():
     return jsonify({"status": "ok"}), 200
