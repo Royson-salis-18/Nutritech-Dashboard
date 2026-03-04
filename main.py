@@ -15,8 +15,7 @@ def index():
 
 @app.route("/entry")
 def entry():
-    # Serve the cleaned, self-contained entry page
-    return send_from_directory(LANDING_DIR, "entry_clean.html")
+    return send_from_directory(LANDING_DIR, "entry.html")
 
 
 @app.route("/assets/<path:filename>")
