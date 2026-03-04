@@ -15,7 +15,8 @@ def index():
 
 @app.route("/entry")
 def entry():
-    return send_from_directory(LANDING_DIR, "entry.html")
+    # Serve the cleaned, self-contained entry page
+    return send_from_directory(LANDING_DIR, "entry_clean.html")
 
 
 @app.route("/assets/<path:filename>")
@@ -31,4 +32,3 @@ def health():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "5000"))
     app.run(host="0.0.0.0", port=port)
-

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NutriTech — Experiment Entry</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Material+Symbols+Outlined" rel="stylesheet" />
+  <style>
+    :root {
+      --accent: #22d3ee;
+      --accent2: #818cf8;
+      --accent3: #34d399;
+      --bg: #050a14;
+      --surface: rgba(255,255,255,0.035);
+      --border: rgba(255,255,255,0.08);
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { margin:0; font-family: Inter, system-ui, Arial, sans-serif; background: var(--bg); color: var(--text); }
+    .wrapper { max-width: 960px; margin: 0 auto; padding: 2rem 1rem 6rem; }
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+    .back-link { color: var(--accent); text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 0.5rem; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 1rem; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .card-title { display:flex; align-items:center; gap:.6rem; font-weight:900; letter-spacing:.06em; font-size:.9rem; color: var(--accent) }
+    .form-group { display:flex; flex-direction: column; gap:.35rem; }
+    label { font-size:.72rem; font-weight:800; color: var(--muted); }
+    .form-control { width:100%; padding:.6rem .75rem; border-radius:.7rem; border:1px solid var(--border); background: rgba(255,255,255,0.03); color: var(--text); }
+    .btn { border:1px solid var(--border); background: rgba(255,255,255,0.05); color: var(--text); padding:.55rem .9rem; border-radius:.7rem; font-weight:800; cursor:pointer; }
+    .btn-primary { background: var(--accent); color:#0b1220; border: none; }
+    .experiment-list { display:flex; flex-direction: column; gap:.5rem; }
+    .experiment-item { display:flex; align-items:center; justify-content: space-between; padding:.7rem .8rem; border-radius:.75rem; border:1px solid var(--border); background: rgba(255,255,255,0.02); cursor: pointer; }
+    .tub-list { display:flex; flex-direction: column; gap:.6rem; }
+    .tub-item { display:grid; grid-template-columns: 1fr auto; gap:.75rem; align-items:center; border:1px solid var(--border); padding:.7rem; border-radius:.75rem; background: rgba(255,255,255,0.02); }
+    .badge { border:1px solid var(--border); padding:.25rem .5rem; border-radius:999px; font-size:.7rem; color: var(--muted); }
+    @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <a href="/" class="back-link"><span class="material-symbols-outlined">arrow_back</span> Back</a>
+      <div style="font-weight:900; letter-spacing:.08em; color:var(--accent)">Experiment Entry</div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-title"><span class="material-symbols-outlined">add_circle</span> New Experiment</div>
+        <form id="create-exp-form">
+          <div class="form-group" style="margin-top:.75rem;">
+            <label>Title</label>
+            <input id="exp-title" class="form-control" placeholder="Hydroponic Phase Alpha" required />
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <input id="exp-desc" class="form-control" placeholder="Research objectives..." />
+          </div>
+          <div class="form-group">
+            <label>Number of Tubs</label>
+            <input id="exp-tubs" type="number" min="1" max="16" value="1" class="form-control" />
+          </div>
+          <div style="display:flex; gap:.5rem; margin-top:.8rem;">
+            <button type="button" class="btn" onclick="showTubConfig()">Configure Tubs</button>
+            <button type="submit" id="finalize-btn" class="btn btn-primary">Initialize Protocol</button>
+          </div>
+        </form>
+        <div id="exp-step-2" style="display:none; margin-top: .9rem;">
+          <div id="tub-config-list"></div>
+        </div>
+      </div>
+
+      <div class="card" id="detail-card">
+        <div class="card-title"><span class="material-symbols-outlined">assignment</span> Existing Protocols</div>
+        <div id="experiment-list" class="experiment-list" style="margin-top:.6rem;">
+          <div style="color:var(--muted); font-size:.85rem;">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:1rem; display:none;" id="detail-panel">
+      <div class="card-title"><span class="material-symbols-outlined">monitoring</span> <span id="selected-title">Experiment Details</span></div>
+      <div id="tub-container" class="tub-list" style="margin-top:.6rem;"></div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = '/api';
+    let currentExpId = null;
+    const step2 = document.getElementById('exp-step-2');
+    const tubConfigList = document.getElementById('tub-config-list');
+
+    function showTubConfig() {
+      const n = parseInt(document.getElementById('exp-tubs').value) || 1;
+      tubConfigList.innerHTML = '';
+      for (let i=1;i<=n;i++) {
+        const div = document.createElement('div');
+        div.className = 'tub-item';
+        div.innerHTML = `
+          <div style="display:flex; align-items:center; gap:.6rem;">
+            <div style="width:34px;height:34px;border-radius:10px;background: rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);font-weight:900;color:#94a3b8;">#${i}</div>
+            <div style="display:flex; gap:.5rem;">
+              <input id="tub-plant-${i}" class="form-control" placeholder="Plant name" />
+              <select id="tub-soil-${i}" class="form-control">
+                <option value="Standard">Standard</option>
+                <option value="Sandy">Sandy</option>
+                <option value="Clay">Clay</option>
+                <option value="Loam">Loam</option>
+              </select>
+            </div>
+          </div>
+        `;
+        tubConfigList.appendChild(div);
+      }
+      step2.style.display = 'block';
+    }
+
+    document.getElementById('create-exp-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('finalize-btn');
+      btn.disabled = true; btn.textContent = 'Saving...';
+      try {
+        const payload = {
+          title: document.getElementById('exp-title').value,
+          description: document.getElementById('exp-desc').value,
+          num_tubs: parseInt(document.getElementById('exp-tubs').value) || 1
+        };
+        const res = await fetch(`${API_BASE}/experiments/`, {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || 'Failed to create experiment');
+        const expId = data.experiment.id;
+        for (let i=1;i<=payload.num_tubs;i++){
+          const plant = document.getElementById(`tub-plant-${i}`)?.value || 'Unknown';
+          const soil  = document.getElementById(`tub-soil-${i}`)?.value || 'Standard';
+          await fetch(`${API_BASE}/experiments/${expId}/tubs`, {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ tub_number: i, plant_type: plant, soil_type: soil })
+          });
+        }
+        loadExperiments();
+        document.getElementById('detail-panel').style.display = 'block';
+        document.getElementById('selected-title').textContent = payload.title;
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        btn.disabled = false; btn.textContent = 'Initialize Protocol';
+      }
+    });
+
+    async function loadExperiments() {
+      try {
+        const res = await fetch(`${API_BASE}/experiments/`);
+        const data = await res.json();
+        const list = document.getElementById('experiment-list');
+        list.innerHTML = '';
+        (data.experiments || data.data || []).forEach(exp => {
+          const row = document.createElement('div');
+          row.className = 'experiment-item';
+          row.innerHTML = `<div><div style="font-weight:800;">${exp.title || 'Untitled'}</div><div style="color:var(--muted);font-size:.8rem;">${(exp.tubs||[]).length} tubs • ${exp.status||'—'}</div></div><span class="material-symbols-outlined" style="color:var(--muted)">chevron_right</span>`;
+          row.onclick = () => showExperiment(exp.id);
+          list.appendChild(row);
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function showExperiment(id) {
+      try {
+        currentExpId = id;
+        const res = await fetch(`${API_BASE}/experiments/${id}/`);
+        const data = await res.json();
+        const exp = data.experiment || data.data;
+        document.getElementById('detail-panel').style.display = 'block';
+        document.getElementById('selected-title').textContent = exp.title || 'Experiment';
+        const tubs = exp.tubs || [];
+        const container = document.getElementById('tub-container');
+        container.innerHTML = '';
+        tubs.forEach(tub => {
+          const div = document.createElement('div');
+          div.className = 'tub-item';
+          div.innerHTML = `<div style="display:flex;align-items:center;gap:.6rem;"><div style="width:34px;height:34px;border-radius:10px;background: rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);font-weight:900;color:#94a3b8;">#${tub.id}</div><div><div style="font-weight:800;">${tub.label||'Tub '+tub.id}</div><div style="font-size:.8rem;color:var(--muted);">${tub.plant_name||'—'} • ${tub.soil_type||'—'}</div></div></div><span class="badge">READY</span>`;
+          container.appendChild(div);
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    loadExperiments();
+  </script>
+  <script src="./assets/virtual-keyboard.js"></script>
+</body>
+</html>
