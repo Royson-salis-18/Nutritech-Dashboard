@@ -193,6 +193,10 @@ async function doLogin() {
 def index():
     return send_from_directory(LANDING_DIR, "index.html")
 
+@app.route("/dashboard")
+def dashboard():
+    return redirect("https://nutritech-rpi.onrender.com/")
+
 @app.route("/login")
 def login_page():
     return render_template_string(LOGIN_HTML)
