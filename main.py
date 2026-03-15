@@ -174,7 +174,7 @@ async function doLogin() {
     });
     const result = await res.json();
     if (result.ok) {
-      window.location.href = 'https://experiments-rpi.onrender.com';
+      window.location.href = 'https://nutritech-rpi-dashboard.onrender.com';
     } else {
       err.textContent = result.error || 'Auth failed';
       btn.disabled = false; spin.style.display = 'none';
@@ -195,7 +195,7 @@ def index():
 
 @app.route("/dashboard")
 def dashboard():
-    return redirect("https://nutritech-rpi.onrender.com/")
+    return redirect("https://nutritech-rpi-dashboard.onrender.com/")
 
 @app.route("/login")
 def login_page():
