@@ -174,7 +174,7 @@ async function doLogin() {
     });
     const result = await res.json();
     if (result.ok) {
-      window.location.href = 'https://nutritech-rpi-dashboard.onrender.com';
+      window.location.href = 'https://experiments-rpi.onrender.com';
     } else {
       err.textContent = result.error || 'Auth failed';
       btn.disabled = false; spin.style.display = 'none';
