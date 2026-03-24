@@ -550,7 +550,7 @@
           </ul>
         </div>
 
-        <a id="btn-control" href="#" onclick="gateAuth('https://hierocratical-kaylie-semivocal.ngrok-free.dev'); return false;" class="card-action btn-emerald">
+        <a id="btn-control" href="#" onclick="gateAuthControl('https://hierocratical-kaylie-semivocal.ngrok-free.dev'); return false;" class="card-action btn-emerald">
           🔒 Login &amp; Control
         </a>
       </div>
@@ -618,6 +618,10 @@
     // Auth gate redirect
     function gateAuth(target) {
       window.location.href = '/login?redirect=' + encodeURIComponent(target);
+    }
+
+    function gateAuthControl(target) {
+      window.location.href = '/login-control?redirect=' + encodeURIComponent(target);
     }
 
     // Toggle instruction dropdown — one open at a time

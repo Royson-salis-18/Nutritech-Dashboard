@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NutriTech — Control Panel Login</title>
+  <meta name="description" content="Secure authentication portal for NutriTech Hardware Control Panel." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Material+Symbols+Outlined&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent:  #34d399; /* emerald-400 */
+      --accent2: #10b981; /* emerald-500 */
+      --accent3: #059669; /* emerald-600 */
+      --warn:    #f97316;
+      --red:     #f87171;
+      --amber:   #fbbf24;
+      --bg:      #050a14;
+      --surface: rgba(255,255,255,0.04);
+      --surface2: rgba(255,255,255,0.07);
+      --border:  rgba(255,255,255,0.08);
+      --border2: rgba(255,255,255,0.14);
+      --text:    #f1f5f9;
+      --muted:   #64748b;
+      --muted2:  #94a3b8;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* ── Animated background ── */
+    .bg-layers {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    }
+    .bg-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(52,211,153,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(52,211,153,0.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, black 40%, transparent 100%);
+    }
+    .bg-glow-l {
+      position: absolute; top: 10%; left: -10%;
+      width: 55vw; height: 55vw; border-radius: 50%;
+      background: radial-gradient(circle, rgba(16,185,129,0.09) 0%, transparent 65%);
+      animation: drift1 16s ease-in-out infinite alternate;
+    }
+    .bg-glow-r {
+      position: absolute; bottom: -15%; right: -5%;
+      width: 50vw; height: 50vw; border-radius: 50%;
+      background: radial-gradient(circle, rgba(52,211,153,0.07) 0%, transparent 65%);
+      animation: drift2 20s ease-in-out infinite alternate;
+    }
+    @keyframes drift1 { 0% { transform: translate(0,0); } 100% { transform: translate(3vw,4vh); } }
+    @keyframes drift2 { 0% { transform: translate(0,0); } 100% { transform: translate(-4vw,-3vh); } }
+
+    /* ── Main split layout ── */
+    .split-layout {
+      position: relative; z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ─────────────── LEFT PANEL ─────────────── */
+    .left-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 3rem 3.5rem;
+      border-right: 1px solid var(--border);
+      background: linear-gradient(160deg, rgba(16,185,129,0.05) 0%, transparent 60%);
+      position: relative;
+      overflow: hidden;
+    }
+    .left-panel::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent2), var(--accent), var(--accent3));
+    }
+
+    /* Back link */
+    .back-link {
+      position: absolute;
+      top: 1.5rem; left: 1.75rem;
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      color: var(--accent); text-decoration: none;
+      font-weight: 700; font-size: 0.8rem;
+      letter-spacing: 0.03em;
+      transition: opacity 0.2s;
+    }
+    .back-link:hover { opacity: 0.65; }
+    .back-link .material-symbols-outlined { font-size: 1rem; }
+
+    /* Brand logo */
+    .brand {
+      display: flex; align-items: center; gap: 0.6rem;
+      margin-bottom: 2.5rem;
+    }
+    .brand-dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent);
+      animation: glowPulse 2s infinite;
+      flex-shrink: 0;
+    }
+    @keyframes glowPulse {
+      0%,100% { box-shadow: 0 0 8px var(--accent), 0 0 16px var(--accent); transform: scale(1); }
+      50%      { box-shadow: 0 0 14px var(--accent), 0 0 28px var(--accent); transform: scale(1.2); }
+    }
+    .brand-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700; font-size: 0.82rem;
+      letter-spacing: 0.1em; color: var(--accent);
+    }
+
+    /* Heading */
+    .panel-heading {
+      margin-bottom: 2rem;
+    }
+    .panel-heading .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem; font-weight: 700;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--muted2); opacity: 0.7;
+      margin-bottom: 0.65rem;
+    }
+    .panel-heading h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      font-weight: 700; line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+    .panel-heading h2 .hi {
+      background: linear-gradient(135deg, #ffffff, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .panel-heading p {
+      margin-top: 0.75rem;
+      font-size: 0.875rem; color: var(--muted2); line-height: 1.7;
+      max-width: 380px;
+    }
+
+    /* Destination badge */
+    .dest-badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.3rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 2rem; width: fit-content;
+    }
+    .dest-control { background: rgba(52,211,153,0.1);  border: 1px solid rgba(52,211,153,0.25);  color: var(--accent); }
+
+    /* Instruction steps */
+    .instr-list {
+      list-style: none;
+      display: flex; flex-direction: column; gap: 1rem;
+    }
+    .instr-list li {
+      display: flex; align-items: flex-start; gap: 0.9rem;
+    }
+    .step-num {
+      flex-shrink: 0;
+      width: 26px; height: 26px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem; font-weight: 700;
+      margin-top: 2px;
+    }
+    .sn-1 { background: rgba(52,211,153,0.1);  color: var(--accent);  border: 1px solid rgba(52,211,153,0.2); }
+    .sn-2 { background: rgba(16,185,129,0.1); color: var(--accent2); border: 1px solid rgba(16,185,129,0.2); }
+    .sn-3 { background: rgba(5,150,105,0.1);  color: var(--accent3); border: 1px solid rgba(5,150,105,0.2); }
+    .sn-4 { background: rgba(248,113,113,0.1); color: var(--red);     border: 1px solid rgba(248,113,113,0.2); }
+
+    .instr-list li span.text {
+      font-size: 0.82rem; color: var(--muted2); line-height: 1.6;
+    }
+    .instr-list li span.text strong { color: var(--text); }
+
+    /* Alert strip */
+    .auth-alert {
+      display: flex; align-items: flex-start; gap: 0.75rem;
+      margin-top: 2rem;
+      padding: 0.85rem 1rem;
+      border-radius: 0.75rem;
+      background: linear-gradient(135deg, rgba(249,115,22,0.07), rgba(248,113,113,0.04));
+      border: 1px solid rgba(249,115,22,0.2);
+      border-left: 3px solid var(--warn);
+    }
+    .auth-alert .warn-icon { font-size: 1rem; flex-shrink: 0; color: var(--warn); margin-top: 2px; }
+    .auth-alert p { font-size: 0.78rem; color: var(--muted2); line-height: 1.6; }
+    .auth-alert strong { color: var(--warn); }
+
+
+    /* ─────────────── RIGHT PANEL ─────────────── */
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 3rem 3rem;
+      background: rgba(6, 13, 31, 0.6);
+      overflow-y: auto;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 1.35rem;
+      padding: 2.25rem 2rem 2rem;
+      backdrop-filter: blur(20px);
+      position: relative;
+      overflow: hidden;
+      animation: fadeUp 0.55s ease 0.1s both;
+    }
+    .login-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+      border-radius: 10px 10px 0 0;
+    }
+
+    .login-header {
+      display: flex; align-items: center; gap: 0.85rem;
+      margin-bottom: 1.75rem;
+    }
+    .shield-icon {
+      width: 50px; height: 50px; border-radius: 14px;
+      background: linear-gradient(135deg, rgba(52,211,153,0.12), rgba(16,185,129,0.12));
+      border: 1px solid rgba(52,211,153,0.2);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent); font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+    .login-header h1 { font-size: 1.15rem; font-weight: 800; }
+    .login-header p  { font-size: 0.72rem; color: var(--muted2); margin-top: 0.1rem; }
+
+    /* Form */
+    .form-group {
+      display: flex; flex-direction: column; gap: 0.3rem;
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 0.07em; text-transform: uppercase;
+      color: var(--muted);
+    }
+    .input-wrapper { position: relative; }
+    .input-wrapper .material-symbols-outlined {
+      position: absolute; left: 0.85rem; top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.05rem; color: var(--muted); pointer-events: none;
+    }
+    .form-input {
+      width: 100%;
+      padding: 0.8rem 0.9rem 0.8rem 2.8rem;
+      border-radius: 0.75rem;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    .form-input:focus {
+      border-color: rgba(52,211,153,0.45);
+      box-shadow: 0 0 0 3px rgba(52,211,153,0.07);
+    }
+    .form-input::placeholder { color: rgba(148,163,184,0.4); }
+
+    .submit-btn {
+      width: 100%; margin-top: 0.25rem;
+      padding: 0.9rem;
+      border-radius: 0.85rem; border: none;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #0b1220;
+      font-family: 'Inter', sans-serif;
+      font-weight: 900; font-size: 0.9rem;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(52,211,153,0.22);
+    }
+    .submit-btn:disabled {
+      opacity: 0.6; cursor: not-allowed;
+      transform: none; box-shadow: none;
+    }
+
+    .error-box {
+      margin-top: 0.85rem;
+      color: #fecaca;
+      background: rgba(254,202,202,0.07);
+      border: 1px solid rgba(254,202,202,0.2);
+      padding: 0.65rem 0.9rem;
+      border-radius: 0.65rem;
+      font-size: 0.8rem;
+      display: none;
+      animation: shake 0.3s ease;
+    }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+
+    /* Hint below card */
+    .hint-bar {
+      margin-top: 1.25rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+      animation: fadeUp 0.6s ease 0.3s both;
+    }
+    .hint-bar a {
+      color: var(--accent); text-decoration: none; font-weight: 600;
+    }
+    .hint-bar a:hover { text-decoration: underline; }
+
+    /* ── Animations ── */
+    @keyframes fadeUp   { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+    @keyframes fadeDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: none; } }
+
+    /* ── Floating particles ── */
+    .particle {
+      position: fixed; border-radius: 50%;
+      pointer-events: none; z-index: 0;
+      animation: floatUp linear infinite;
+    }
+    @keyframes floatUp {
+      0%   { transform: translateY(110vh) scale(0); opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 1; }
+      100% { transform: translateY(-8vh) scale(1); opacity: 0; }
+    }
+
+    /* ── Responsive: stack vertically on small screens ── */
+    @media (max-width: 820px) {
+      html, body { overflow: auto; }
+      .split-layout { grid-template-columns: 1fr; height: auto; }
+      .left-panel { padding: 5rem 2rem 2rem; border-right: none; border-bottom: 1px solid var(--border); }
+      .right-panel { padding: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background -->
+  <div class="bg-layers">
+    <div class="bg-grid"></div>
+    <div class="bg-glow-l"></div>
+    <div class="bg-glow-r"></div>
+  </div>
+
+  <!-- Floating particles -->
+  <div class="particle" style="width:2px;height:2px;background:rgba(52,211,153,0.35);left:12%;animation-duration:14s;animation-delay:0s"></div>
+  <div class="particle" style="width:3px;height:3px;background:rgba(16,185,129,0.3);left:55%;animation-duration:19s;animation-delay:3s"></div>
+  <div class="particle" style="width:2px;height:2px;background:rgba(52,211,153,0.25);left:82%;animation-duration:16s;animation-delay:1.5s"></div>
+
+  <div class="split-layout">
+
+    <!-- ══════════════ LEFT PANEL — INSTRUCTIONS ══════════════ -->
+    <div class="left-panel">
+
+      <a href="/" class="back-link">
+        <span class="material-symbols-outlined">arrow_back</span>
+        Back to Platform
+      </a>
+
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span class="brand-name">NUTRITECH //</span>
+      </div>
+
+      <div class="panel-heading">
+        <div class="eyebrow">// Hardware Control Portal</div>
+        <h2><span class="hi">Hardware</span><br/>Control Panel</h2>
+        <p>This area provides direct control to irrigation, lighting, and environmental systems. Restricted to authorized personnel.</p>
+      </div>
+
+      <div class="dest-badge dest-control">
+        <span class="material-symbols-outlined" style="font-size:0.85rem">tune</span>
+        <span>Accessing: Control Panel</span>
+      </div>
+
+      <!-- Step-by-step instructions -->
+      <ul class="instr-list">
+        <li>
+          <span class="step-num sn-1">01</span>
+          <span class="text">Enter your registered <strong>email address</strong> and <strong>password</strong>.</span>
+        </li>
+        <li>
+          <span class="step-num sn-2">02</span>
+          <span class="text">Only personnel with <strong>Hardware Administration rights</strong> can access this panel.</span>
+        </li>
+        <li>
+          <span class="step-num sn-3">03</span>
+          <span class="text">After successful login, you'll be redirected to the <strong>Control Panel</strong> instantly.</span>
+        </li>
+        <li>
+          <span class="step-num sn-4">04</span>
+          <span class="text"><strong>Do not leave this panel unattended.</strong> Ensure you return to the main platform when finished.</span>
+        </li>
+      </ul>
+
+      <!-- Security alert -->
+      <div class="auth-alert">
+        <span class="material-symbols-outlined warn-icon">warning</span>
+        <p><strong>Security Notice:</strong> Direct hardware control access is logged. Unauthorized modifications to physical endpoints will trigger security alerts.</p>
+      </div>
+
+    </div>
+
+    <!-- ══════════════ RIGHT PANEL — LOGIN FORM ══════════════ -->
+    <div class="right-panel">
+
+      <div class="login-card">
+        <div class="login-header">
+          <div class="shield-icon">
+            <span class="material-symbols-outlined">shield</span>
+          </div>
+          <div>
+            <h1>Hardware Authentication</h1>
+            <p>NutriTech Admins Only</p>
+          </div>
+        </div>
+
+        <form id="login-form" autocomplete="off">
+          <div class="form-group">
+            <label>Email Address</label>
+            <div class="input-wrapper">
+              <span class="material-symbols-outlined">mail</span>
+              <input id="email" type="email" class="form-input" placeholder="admin@nutritech.org" required autocomplete="off" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <div class="input-wrapper">
+              <span class="material-symbols-outlined">key</span>
+              <input id="password" type="password" class="form-input" placeholder="Enter your password" required autocomplete="off" />
+            </div>
+          </div>
+          <button class="submit-btn" id="submit-btn" type="submit">
+            Authenticate &amp; Access Controls
+          </button>
+          <div id="error" class="error-box"></div>
+        </form>
+      </div>
+
+      <div class="hint-bar">
+        Not authorized? <a href="/">Return to the main platform</a>
+      </div>
+
+    </div>
+    <!-- end right panel -->
+
+  </div>
+
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // ─── Supabase Client ───
+    const SUPABASE_URL = "https://ciosgjvbflsnrkhbriqh.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_VapU8vP433UngqaNKC9xIA_GgWByL9f";
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ─── Redirect Target ───
+    const params = new URLSearchParams(location.search);
+    const redirectTarget = params.get('redirect') || 'https://hierocratical-kaylie-semivocal.ngrok-free.dev';
+
+    // ─── Form Handler ───
+    const form      = document.getElementById('login-form');
+    const emailEl   = document.getElementById('email');
+    const passwordEl = document.getElementById('password');
+    const btn       = document.getElementById('submit-btn');
+    const errorBox  = document.getElementById('error');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorBox.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Authenticating...';
+
+      try {
+        const { data, error } = await client.auth.signInWithPassword({
+          email: emailEl.value.trim(),
+          password: passwordEl.value
+        });
+        if (error) throw error;
+
+        if (data?.session?.access_token) {
+          localStorage.setItem('nt_token', data.session.access_token);
+        }
+
+        btn.textContent = '✓ Authenticated — Redirecting...';
+        btn.style.background = 'linear-gradient(135deg, #34d399, #059669)';
+
+        setTimeout(() => { location.href = redirectTarget; }, 600);
+
+      } catch (err) {
+        errorBox.textContent = err.message || 'Authentication failed. Please check your credentials.';
+        errorBox.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Authenticate & Access Controls';
+      }
+    });
+  </script>
+
+  <!-- On-screen virtual keyboard -->
+  <script src="./assets/virtual-keyboard.js"></script>
+</body>
+</html>
