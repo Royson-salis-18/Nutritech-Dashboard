@@ -4,340 +4,632 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NutriTech — Plant Intelligence Platform</title>
-  <meta name="description" content="NutriTech experimental plant health monitoring platform — real-time sensing, ML-powered analytics, and adaptive control." />
+  <meta name="description" content="NutriTech experimental plant health monitoring — real-time sensing, ML-powered analytics, adaptive control." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --accent: #22d3ee;
-      --accent2: #818cf8;
-      --accent3: #34d399;
-      --bg: #050a14;
-      --surface: rgba(255,255,255,0.035);
-      --border: rgba(255,255,255,0.08);
-      --text: #f1f5f9;
-      --muted: #64748b;
+      --cyan:    #00f5ff;
+      --violet:  #a855f7;
+      --emerald: #00ff9d;
+      --amber:   #ffb800;
+      --red:     #ff4d6d;
+      --bg:      #030712;
+      --bg2:     #060d1f;
+      --surface: rgba(255,255,255,0.028);
+      --border:  rgba(255,255,255,0.07);
+      --text:    #e2e8f0;
+      --muted:   #475569;
+      --muted2:  #8892a4;
     }
 
-    html, body {
-      min-height: 100vh;
-      font-family: 'Inter', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      overflow-x: hidden;
-    }
+    html, body { min-height: 100vh; font-family: 'Space Grotesk', 'Inter', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
 
-    /* ── Animated gradient background ── */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background:
-        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(34,211,238,0.08) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 50% at 80% 80%, rgba(129,140,248,0.07) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(52,211,153,0.04) 0%, transparent 70%);
+    /* ── Deep space background ── */
+    .bg-layers {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+    }
+    .bg-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,245,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,245,255,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+    }
+    .bg-glow-1 {
+      position: absolute; top: -20%; left: -10%;
+      width: 70vw; height: 70vw; border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,245,255,0.06) 0%, transparent 65%);
+      animation: drift1 14s ease-in-out infinite alternate;
+    }
+    .bg-glow-2 {
+      position: absolute; bottom: -20%; right: -10%;
+      width: 60vw; height: 60vw; border-radius: 50%;
+      background: radial-gradient(circle, rgba(168,85,247,0.07) 0%, transparent 65%);
+      animation: drift2 18s ease-in-out infinite alternate;
+    }
+    .bg-glow-3 {
+      position: absolute; top: 40%; left: 40%;
+      width: 40vw; height: 40vw; border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,255,157,0.04) 0%, transparent 65%);
+      animation: drift3 22s ease-in-out infinite alternate;
+    }
+    @keyframes drift1 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(5vw, 3vh) scale(1.1); } }
+    @keyframes drift2 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(-4vw,-5vh) scale(1.15); } }
+    @keyframes drift3 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(-3vw, 4vh) scale(0.9); } }
+
+    /* Scanline effect */
+    .bg-scanlines {
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 4px);
       pointer-events: none;
-      z-index: 0;
+    }
+    /* Noise texture */
+    .bg-noise {
+      position: absolute; inset: 0; opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 200px 200px;
     }
 
-    /* ── Grid dots overlay ── */
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
-      background-size: 32px 32px;
-      pointer-events: none;
-      z-index: 0;
-    }
-
+    /* ── Wrapper ── */
     .wrapper {
-      position: relative;
-      z-index: 1;
+      position: relative; z-index: 1;
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 3rem 1.5rem 4rem;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 2.5rem 1.5rem 5rem;
+      max-width: 1200px; margin: 0 auto;
     }
 
-    /* ── Status pill ── */
+    /* ── Top bar ── */
+    .topbar {
+      width: 100%; display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 3.5rem;
+      animation: fadeDown 0.5s ease both;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 0.6rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700; font-size: 0.85rem;
+      letter-spacing: 0.06em;
+      color: var(--cyan);
+    }
+    .logo-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan), 0 0 20px var(--cyan);
+      animation: glowPulse 2s infinite;
+    }
+    @keyframes glowPulse {
+      0%, 100% { box-shadow: 0 0 8px var(--cyan), 0 0 16px var(--cyan); transform: scale(1); }
+      50% { box-shadow: 0 0 12px var(--cyan), 0 0 24px var(--cyan), 0 0 40px var(--cyan); transform: scale(1.2); }
+    }
     .status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
+      display: inline-flex; align-items: center; gap: 0.5rem;
       padding: 0.35rem 1rem;
-      border: 1px solid rgba(34,211,238,0.25);
+      border: 1px solid rgba(0,255,157,0.25);
       border-radius: 999px;
-      background: rgba(34,211,238,0.06);
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 2.5rem;
-      animation: fadeDown 0.6s ease both;
+      background: rgba(0,255,157,0.05);
+      font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--emerald);
+      font-family: 'JetBrains Mono', monospace;
     }
     .status-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--accent);
-      animation: pulse 2s infinite;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 6px var(--emerald);
+      animation: glowPulse2 2s infinite;
     }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50%       { opacity: 0.4; transform: scale(0.8); }
+    @keyframes glowPulse2 {
+      0%,100% { opacity:1; box-shadow: 0 0 6px var(--emerald); }
+      50% { opacity:0.5; box-shadow: 0 0 2px var(--emerald); }
     }
 
     /* ── Hero ── */
-    .hero { text-align: center; margin-bottom: 1rem; animation: fadeDown 0.7s ease 0.1s both; }
+    .hero { text-align: center; margin-bottom: 1.25rem; animation: fadeDown 0.65s ease 0.1s both; }
+    .hero-eyebrow {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--cyan); opacity: 0.7;
+      margin-bottom: 1rem;
+    }
     .hero h1 {
-      font-size: clamp(2.6rem, 6vw, 5rem);
-      font-weight: 900;
-      line-height: 1.05;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(3rem, 7vw, 5.5rem);
+      font-weight: 700;
+      line-height: 1.04;
       letter-spacing: -0.03em;
-      background: linear-gradient(135deg, #f1f5f9 30%, var(--accent) 70%, var(--accent2) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+    }
+    .hero h1 .word-nutri {
+      background: linear-gradient(135deg, #ffffff 0%, var(--cyan) 50%, #7dd3fc 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero h1 .word-tech {
+      background: linear-gradient(135deg, var(--violet) 0%, #e879f9 60%, var(--cyan) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
     .hero .sub {
-      margin-top: 1.25rem;
-      font-size: 1.05rem;
-      color: var(--muted);
-      max-width: 560px;
-      line-height: 1.7;
+      margin: 1.25rem auto 0;
+      font-size: 1rem; color: var(--muted2); max-width: 520px; line-height: 1.75;
     }
 
-    /* ── Setup description ── */
-    .setup-card {
-      margin: 2.5rem 0 3.5rem;
-      max-width: 720px;
+    /* ── Glowing divider line ── */
+    .glow-line {
+      width: 200px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      margin: 2rem auto;
+      animation: fadeUp 0.7s ease 0.3s both;
+    }
+
+    /* ── INSTRUCTIONS SECTION ── */
+    .section-label {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin-bottom: 1.25rem;
+      animation: fadeUp 0.5s ease both;
+    }
+    .section-label .line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--border)); }
+    .section-label .line.right { background: linear-gradient(90deg, var(--border), transparent); }
+    .section-label span {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem; font-weight: 700;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    /* ── Alert Banner ── */
+    .alert-banner {
       width: 100%;
+      background: linear-gradient(135deg, rgba(255,77,109,0.06), rgba(255,184,0,0.04));
+      border: 1px solid rgba(255,77,109,0.2);
+      border-left: 3px solid var(--red);
+      border-radius: 0.75rem;
+      padding: 1rem 1.25rem;
+      display: flex; align-items: flex-start; gap: 0.85rem;
+      margin-bottom: 1.25rem;
+      animation: fadeUp 0.55s ease 0.15s both;
+    }
+    .alert-banner .alert-icon {
+      font-size: 1.2rem; flex-shrink: 0; margin-top: 0.05rem;
+    }
+    .alert-banner h3 {
+      font-size: 0.8rem; font-weight: 700;
+      color: var(--red);
+      margin-bottom: 0.25rem; letter-spacing: 0.03em;
+    }
+    .alert-banner p { font-size: 0.78rem; color: var(--muted2); line-height: 1.6; }
+
+    /* ── Instruction Cards Grid ── */
+    .instr-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.9rem;
+      width: 100%;
+      margin-bottom: 2.5rem;
+      animation: fadeUp 0.6s ease 0.2s both;
+    }
+    @media (max-width: 680px) { .instr-grid { grid-template-columns: 1fr; } }
+
+    .instr-card {
+      position: relative; overflow: hidden;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 1.25rem;
-      padding: 2rem 2.25rem;
-      animation: fadeUp 0.7s ease 0.25s both;
-      backdrop-filter: blur(12px);
+      border-radius: 1rem;
+      padding: 1.25rem 1.4rem 1.25rem 1.25rem;
+      backdrop-filter: blur(10px);
+      transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
     }
-    .setup-card h2 {
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 0.9rem;
+    .instr-card::after {
+      content: '';
+      position: absolute; inset: 0; border-radius: inherit;
+      background: var(--card-glow, transparent);
+      opacity: 0; transition: opacity 0.35s ease;
+      pointer-events: none;
     }
-    .setup-card p {
-      font-size: 0.925rem;
-      color: #94a3b8;
-      line-height: 1.8;
-    }
-    .setup-card .meta-row {
-      display: flex;
-      gap: 2rem;
-      flex-wrap: wrap;
-      margin-top: 1.4rem;
-      padding-top: 1.4rem;
-      border-top: 1px solid var(--border);
-    }
-    .meta-item { display: flex; flex-direction: column; gap: 0.2rem; }
-    .meta-item .label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
-    .meta-item .value { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+    .instr-card:hover { transform: translateY(-3px); }
+    .instr-card:hover::after { opacity: 1; }
 
-    /* ── Nav Cards ── */
+    .instr-card.c-cyan  { --card-glow: radial-gradient(ellipse 80% 60% at 10% 0%, rgba(0,245,255,0.07), transparent); }
+    .instr-card.c-cyan:hover  { border-color: rgba(0,245,255,0.25); box-shadow: 0 0 30px rgba(0,245,255,0.07); }
+    .instr-card.c-violet { --card-glow: radial-gradient(ellipse 80% 60% at 10% 0%, rgba(168,85,247,0.07), transparent); }
+    .instr-card.c-violet:hover { border-color: rgba(168,85,247,0.25); box-shadow: 0 0 30px rgba(168,85,247,0.07); }
+    .instr-card.c-emerald { --card-glow: radial-gradient(ellipse 80% 60% at 10% 0%, rgba(0,255,157,0.07), transparent); }
+    .instr-card.c-emerald:hover { border-color: rgba(0,255,157,0.25); box-shadow: 0 0 30px rgba(0,255,157,0.07); }
+    .instr-card.c-amber { --card-glow: radial-gradient(ellipse 80% 60% at 10% 0%, rgba(255,184,0,0.07), transparent); }
+    .instr-card.c-amber:hover { border-color: rgba(255,184,0,0.25); box-shadow: 0 0 30px rgba(255,184,0,0.07); }
+
+    .instr-card-top {
+      display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.65rem;
+    }
+    .instr-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem; font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 0.2rem 0.5rem;
+      border-radius: 5px;
+      flex-shrink: 0;
+    }
+    .num-cyan    { background: rgba(0,245,255,0.1);   color: var(--cyan);    border: 1px solid rgba(0,245,255,0.2); }
+    .num-violet  { background: rgba(168,85,247,0.1);  color: var(--violet);  border: 1px solid rgba(168,85,247,0.2); }
+    .num-emerald { background: rgba(0,255,157,0.1);   color: var(--emerald); border: 1px solid rgba(0,255,157,0.2); }
+    .num-amber   { background: rgba(255,184,0,0.1);   color: var(--amber);   border: 1px solid rgba(255,184,0,0.2); }
+
+    .instr-icon-wrap {
+      width: 36px; height: 36px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+    }
+    .iw-cyan    { background: rgba(0,245,255,0.08);  border: 1px solid rgba(0,245,255,0.15); }
+    .iw-violet  { background: rgba(168,85,247,0.08); border: 1px solid rgba(168,85,247,0.15); }
+    .iw-emerald { background: rgba(0,255,157,0.08);  border: 1px solid rgba(0,255,157,0.15); }
+    .iw-amber   { background: rgba(255,184,0,0.08);  border: 1px solid rgba(255,184,0,0.15); }
+
+    .instr-card h3 { font-size: 0.875rem; font-weight: 700; margin-bottom: 0.35rem; color: var(--text); }
+    .instr-card p  { font-size: 0.78rem; color: var(--muted2); line-height: 1.65; }
+
+    .access-tag {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      margin-top: 0.7rem;
+      padding: 0.18rem 0.55rem;
+      border-radius: 5px;
+      font-size: 0.6rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.09em;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .tag-r { background: rgba(255,77,109,0.1);  color: var(--red);     border: 1px solid rgba(255,77,109,0.2); }
+    .tag-p { background: rgba(0,255,157,0.1);   color: var(--emerald); border: 1px solid rgba(0,255,157,0.2); }
+    .tag-h { background: rgba(255,184,0,0.1);   color: var(--amber);   border: 1px solid rgba(255,184,0,0.2); }
+
+    /* ── Action Cards ── */
+    .section-label-2 { animation-delay: 0.35s; }
+
     .cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 1.5rem;
-      max-width: 900px;
-      width: 100%;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.1rem; width: 100%;
+      animation: fadeUp 0.6s ease 0.4s both;
     }
+    @media (max-width: 720px) { .cards { grid-template-columns: 1fr; } }
 
-    .card {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      gap: 1.1rem;
-      padding: 2rem;
-      border-radius: 1.5rem;
+    .nav-card {
+      position: relative; overflow: hidden;
+      border-radius: 1.15rem;
       border: 1px solid var(--border);
-      background: var(--surface);
-      backdrop-filter: blur(16px);
+      background: rgba(6,13,31,0.8);
+      backdrop-filter: blur(20px);
+      padding: 1.6rem;
+      text-decoration: none; color: inherit;
       cursor: pointer;
-      text-decoration: none;
-      color: inherit;
-      overflow: hidden;
-      transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-      animation: fadeUp 0.6s ease both;
+      display: flex; flex-direction: column; gap: 0;
+      transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
     }
-    .card:nth-child(1) { animation-delay: 0.3s; }
-    .card:nth-child(2) { animation-delay: 0.42s; }
-    .card:nth-child(3) { animation-delay: 0.54s; }
-
-    .card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
+    /* Animated gradient border on hover via pseudo */
+    .nav-card::before {
+      content: ''; position: absolute; inset: 0;
       border-radius: inherit;
-      opacity: 0;
-      transition: opacity 0.3s ease;
+      padding: 1px;
+      background: var(--hov-border, transparent);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+      opacity: 0; transition: opacity 0.35s ease;
     }
-    .card-blue::before  { background: radial-gradient(ellipse 80% 80% at 50% 0%, rgba(34,211,238,0.12), transparent); }
-    .card-purple::before{ background: radial-gradient(ellipse 80% 80% at 50% 0%, rgba(129,140,248,0.12), transparent); }
-    .card-green::before { background: radial-gradient(ellipse 80% 80% at 50% 0%, rgba(52,211,153,0.12), transparent); }
+    .nav-card::after {
+      content: ''; position: absolute; inset: 0; border-radius: inherit;
+      background: var(--hov-glow, transparent);
+      opacity: 0; transition: opacity 0.35s ease; pointer-events: none;
+    }
+    .nav-card:hover { transform: translateY(-5px); }
+    .nav-card:hover::before, .nav-card:hover::after { opacity: 1; }
 
-    .card:hover::before { opacity: 1; }
-    .card-blue:hover  { border-color: rgba(34,211,238,0.4);  box-shadow: 0 0 40px rgba(34,211,238,0.08);  transform: translateY(-4px); }
-    .card-purple:hover{ border-color: rgba(129,140,248,0.4); box-shadow: 0 0 40px rgba(129,140,248,0.08); transform: translateY(-4px); }
-    .card-green:hover { border-color: rgba(52,211,153,0.4);  box-shadow: 0 0 40px rgba(52,211,153,0.08);  transform: translateY(-4px); }
+    /* Blue/cyan card */
+    .nc-cyan {
+      --hov-border: linear-gradient(135deg, var(--cyan), transparent, rgba(0,245,255,0.3));
+      --hov-glow: radial-gradient(ellipse 100% 60% at 50% 0%, rgba(0,245,255,0.07), transparent);
+    }
+    .nc-cyan:hover { border-color: rgba(0,245,255,0.35); box-shadow: 0 20px 60px rgba(0,245,255,0.08), 0 0 0 1px rgba(0,245,255,0.1); }
 
-    .card.disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+    .nc-violet {
+      --hov-border: linear-gradient(135deg, var(--violet), transparent, rgba(168,85,247,0.3));
+      --hov-glow: radial-gradient(ellipse 100% 60% at 50% 0%, rgba(168,85,247,0.07), transparent);
+    }
+    .nc-violet:hover { border-color: rgba(168,85,247,0.35); box-shadow: 0 20px 60px rgba(168,85,247,0.08), 0 0 0 1px rgba(168,85,247,0.1); }
 
+    .nc-emerald {
+      --hov-border: linear-gradient(135deg, var(--emerald), transparent, rgba(0,255,157,0.3));
+      --hov-glow: radial-gradient(ellipse 100% 60% at 50% 0%, rgba(0,255,157,0.07), transparent);
+    }
+    .nc-emerald:hover { border-color: rgba(0,255,157,0.35); box-shadow: 0 20px 60px rgba(0,255,157,0.08), 0 0 0 1px rgba(0,255,157,0.1); }
+
+    .nc-amber {
+      --hov-border: linear-gradient(135deg, var(--amber), transparent, rgba(255,184,0,0.3));
+      --hov-glow: radial-gradient(ellipse 100% 60% at 50% 0%, rgba(255,184,0,0.07), transparent);
+    }
+    .nc-amber:hover { border-color: rgba(255,184,0,0.35); box-shadow: 0 20px 60px rgba(255,184,0,0.08), 0 0 0 1px rgba(255,184,0,0.1); }
+
+    .card-icon-row {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;
+    }
     .card-icon {
-      width: 52px; height: 52px;
-      border-radius: 1rem;
+      width: 52px; height: 52px; border-radius: 14px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.6rem;
+      font-size: 1.5rem;
     }
-    .icon-blue   { background: rgba(34,211,238,0.12);  border: 1px solid rgba(34,211,238,0.2); }
-    .icon-purple { background: rgba(129,140,248,0.12); border: 1px solid rgba(129,140,248,0.2); }
-    .icon-green  { background: rgba(52,211,153,0.12);  border: 1px solid rgba(52,211,153,0.2); }
+    .ci-cyan    { background: rgba(0,245,255,0.1);  border: 1px solid rgba(0,245,255,0.18); }
+    .ci-violet  { background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.18); }
+    .ci-emerald { background: rgba(0,255,157,0.1);  border: 1px solid rgba(0,255,157,0.18); }
+    .ci-amber   { background: rgba(255,184,0,0.1);  border: 1px solid rgba(255,184,0,0.18); }
 
-    .card-body h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.4rem; }
-    .card-body p  { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
-
-    .card-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      font-size: 0.65rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.09em;
-      padding: 0.25rem 0.65rem;
-      border-radius: 999px;
-      width: fit-content;
+    .arrow-icon {
+      font-size: 1.2rem; color: var(--muted);
+      opacity: 0; transform: translate(-4px, 4px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
     }
-    .badge-blue   { background: rgba(34,211,238,0.1);  color: var(--accent);  border: 1px solid rgba(34,211,238,0.2); }
-    .badge-purple { background: rgba(129,140,248,0.1); color: var(--accent2); border: 1px solid rgba(129,140,248,0.2); }
-    .badge-green  { background: rgba(52,211,153,0.1);  color: var(--accent3); border: 1px solid rgba(52,211,153,0.2); }
-    .badge-grey   { background: rgba(100,116,139,0.1); color: var(--muted);   border: 1px solid rgba(100,116,139,0.2); }
+    .nav-card:hover .arrow-icon { opacity: 1; transform: translate(0,0); }
 
-    .card-arrow {
-      position: absolute;
-      top: 1.5rem; right: 1.5rem;
-      font-size: 1rem;
-      opacity: 0;
-      transform: translateX(-4px);
-      transition: opacity 0.2s ease, transform 0.2s ease;
+    .nav-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.35rem; }
+    .nav-card p  { font-size: 0.8rem; color: var(--muted2); line-height: 1.65; flex: 1; }
+
+    .card-tags {
+      display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;
     }
-    .card:hover .card-arrow { opacity: 1; transform: translateX(0); }
+    .ctag {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      padding: 0.2rem 0.6rem; border-radius: 5px;
+      font-size: 0.6rem; font-weight: 700;
+      letter-spacing: 0.09em; text-transform: uppercase;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .ctag-cyan    { background: rgba(0,245,255,0.08);  color: var(--cyan);    border: 1px solid rgba(0,245,255,0.15); }
+    .ctag-violet  { background: rgba(168,85,247,0.08); color: var(--violet);  border: 1px solid rgba(168,85,247,0.15); }
+    .ctag-emerald { background: rgba(0,255,157,0.08);  color: var(--emerald); border: 1px solid rgba(0,255,157,0.15); }
+    .ctag-amber   { background: rgba(255,184,0,0.08);  color: var(--amber);   border: 1px solid rgba(255,184,0,0.15); }
+    .ctag-red     { background: rgba(255,77,109,0.08); color: var(--red);     border: 1px solid rgba(255,77,109,0.15); }
+    .ctag-grey    { background: rgba(71,85,105,0.15);  color: var(--muted2);  border: 1px solid rgba(71,85,105,0.25); }
+
+    /* Lock overlay for auth-gated cards */
+    .lock-overlay {
+      position: absolute; top: 1rem; right: 1rem;
+      width: 28px; height: 28px; border-radius: 8px;
+      background: rgba(255,77,109,0.1);
+      border: 1px solid rgba(255,77,109,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem;
+    }
 
     /* ── Footer ── */
     .footer {
-      margin-top: 4rem;
-      font-size: 0.75rem;
-      color: #334155;
-      text-align: center;
-      animation: fadeUp 0.6s ease 0.8s both;
+      margin-top: 3.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem; color: #1e293b; text-align: center;
+      letter-spacing: 0.08em;
+      animation: fadeUp 0.6s ease 0.9s both;
     }
 
-    @keyframes fadeDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: none; } }
-    @keyframes fadeUp   { from { opacity: 0; transform: translateY(20px);  } to { opacity: 1; transform: none; } }
+    /* ── Particles ── */
+    .particle {
+      position: fixed; border-radius: 50%; pointer-events: none; z-index: 0;
+      animation: floatUp linear infinite;
+    }
+    @keyframes floatUp {
+      0%   { transform: translateY(110vh) scale(0); opacity: 0; }
+      8%   { opacity: 1; }
+      92%  { opacity: 1; }
+      100% { transform: translateY(-8vh) scale(1.2); opacity: 0; }
+    }
+
+    @keyframes fadeDown { from { opacity:0; transform:translateY(-18px); } to { opacity:1; transform:none; } }
+    @keyframes fadeUp   { from { opacity:0; transform:translateY(22px);  } to { opacity:1; transform:none; } }
   </style>
 </head>
 <body>
+
+  <!-- Background layers -->
+  <div class="bg-layers">
+    <div class="bg-grid"></div>
+    <div class="bg-glow-1"></div>
+    <div class="bg-glow-2"></div>
+    <div class="bg-glow-3"></div>
+    <div class="bg-scanlines"></div>
+    <div class="bg-noise"></div>
+  </div>
+
+  <!-- Particles -->
+  <div class="particle" style="width:2px;height:2px;background:var(--cyan);left:8%;animation-duration:13s;animation-delay:0s;box-shadow:0 0 4px var(--cyan)"></div>
+  <div class="particle" style="width:3px;height:3px;background:var(--violet);left:23%;animation-duration:17s;animation-delay:2.5s;box-shadow:0 0 6px var(--violet)"></div>
+  <div class="particle" style="width:2px;height:2px;background:var(--emerald);left:51%;animation-duration:15s;animation-delay:5s;box-shadow:0 0 4px var(--emerald)"></div>
+  <div class="particle" style="width:2px;height:2px;background:var(--cyan);left:72%;animation-duration:19s;animation-delay:1s;box-shadow:0 0 4px var(--cyan)"></div>
+  <div class="particle" style="width:3px;height:3px;background:var(--amber);left:88%;animation-duration:14s;animation-delay:3.5s;box-shadow:0 0 6px var(--amber)"></div>
+  <div class="particle" style="width:2px;height:2px;background:var(--violet);left:40%;animation-duration:21s;animation-delay:7s;box-shadow:0 0 4px var(--violet)"></div>
+
   <div class="wrapper">
 
-    <div class="status-pill">
-      <span class="status-dot"></span>
-      Experiment Active — Live Sensing
-    </div>
-
-    <div class="hero">
-      <h1>NutriTech<br/>Intelligence Platform</h1>
-      <p class="sub">
-        Precision plant health monitoring with real-time sensor fusion,
-        physics-based scoring, and ML-powered predictive analytics.
-      </p>
-    </div>
-
-    <div class="setup-card">
-      <h2>Experimental Setup</h2>
-      <p>
-        This platform tracks modular tub-based growing environments instrumented with
-        soil moisture, NPK, EC, pH, temperature, humidity, VPD and light sensors.
-        Data is ingested continuously into Supabase, cleaned, and scored using both
-        physics-derived formulas and machine-learning models to give a complete picture
-        of plant health, stress accumulation, and growth trajectory.
-      </p>
-      <div class="meta-row">
-        <div class="meta-item">
-          <span class="label">Platform</span>
-          <span class="value">NutriTech v1.0</span>
-        </div>
-        <div class="meta-item">
-          <span class="label">Data Backend</span>
-          <span class="value">Supabase + Flask</span>
-        </div>
-        <div class="meta-item">
-          <span class="label">Analytics</span>
-          <span class="value">XGBoost · Physics Engine</span>
-        </div>
-        <div class="meta-item">
-          <span class="label">Status</span>
-          <span class="value" style="color: #34d399;">● Live</span>
-        </div>
+    <!-- Top Bar -->
+    <div class="topbar">
+      <div class="logo">
+        <div class="logo-dot"></div>
+        NUTRITECH //
       </div>
+      <div class="status-pill">
+        <span class="status-dot"></span>
+        SYS:LIVE &nbsp;· &nbsp;SENSING
+      </div>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-eyebrow">// Plant Intelligence Platform v1.0</div>
+      <h1>
+        <span class="word-nutri">Nutri</span><span class="word-tech">Tech</span><br/>
+        Intelligence
+      </h1>
+      <p class="sub">
+        Precision agriculture monitoring — real-time sensor fusion, physics-based health scoring, and ML-powered predictive analytics.
+      </p>
+    </div>
+
+    <div class="glow-line"></div>
+
+    <!-- ── ACCESS INSTRUCTIONS ── -->
+    <div class="section-label" style="width:100%;margin-bottom:1rem;animation-delay:0.2s">
+      <div class="line"></div>
+      <span>⚠ &nbsp;Access Guidelines &amp; Instructions</span>
+      <div class="line right"></div>
+    </div>
+
+    <!-- Alert -->
+    <div class="alert-banner">
+      <div class="alert-icon">🔒</div>
+      <div>
+        <h3>RESTRICTED ACCESS NOTICE</h3>
+        <p>The <strong>Experiment Entry</strong> and <strong>Control Panel</strong> modules are restricted to authorized research personnel only. Authentication is strictly enforced and sessions are invalidated upon returning to this page.</p>
+      </div>
+    </div>
+
+    <!-- Instruction Cards -->
+    <div class="instr-grid" style="margin-bottom:2.25rem">
+
+      <div class="instr-card c-violet">
+        <div class="instr-card-top">
+          <span class="instr-num num-violet">01</span>
+          <div class="instr-icon-wrap iw-violet">🧪</div>
+          <h3>Experiment Entry</h3>
+        </div>
+        <p>Log new experiments, configure tubs, and record observations. <strong>Requires valid Supabase credentials.</strong> On-screen keyboard available for kiosk use. Sessions auto-expire when you leave.</p>
+        <span class="access-tag tag-r">⛔ Auth Required</span>
+      </div>
+
+      <div class="instr-card c-cyan">
+        <div class="instr-card-top">
+          <span class="instr-num num-cyan">02</span>
+          <div class="instr-icon-wrap iw-cyan">🎛️</div>
+          <h3>Control Panel</h3>
+        </div>
+        <p>Direct hardware access for irrigation, lighting, and sensor calibration. <strong>Restricted to authorized operators only.</strong> Requires login before accessing the external control interface.</p>
+        <span class="access-tag tag-r">⛔ Auth Required</span>
+      </div>
+
+      <div class="instr-card c-amber">
+        <div class="instr-card-top">
+          <span class="instr-num num-amber">03</span>
+          <div class="instr-icon-wrap iw-amber">💧</div>
+          <h3>Soil Moisture Readings</h3>
+        </div>
+        <p>Real-time soil moisture sensor (capacitive) readings are shown on the <strong>circuit panel on the right side of the physical setup.</strong> Walk to the hardware station to check live values per tub.</p>
+        <span class="access-tag tag-h">⚠ Physical Access</span>
+      </div>
+
+      <div class="instr-card c-emerald">
+        <div class="instr-card-top">
+          <span class="instr-num num-emerald">04</span>
+          <div class="instr-icon-wrap iw-emerald">📊</div>
+          <h3>Data &amp; Analytics</h3>
+        </div>
+        <p>View all experiment analytics, ML predictions, health scores, sensor trends, and cross-experiment comparisons in the <strong>Data Dashboard.</strong> Open access — no login required for monitoring.</p>
+        <span class="access-tag tag-p">✓ Open Access</span>
+      </div>
+
+    </div>
+
+    <!-- ── QUICK ACTIONS ── -->
+    <div class="section-label section-label-2" style="width:100%;margin-bottom:1.25rem;animation-delay:0.35s">
+      <div class="line"></div>
+      <span>// Quick Actions</span>
+      <div class="line right"></div>
     </div>
 
     <div class="cards">
 
-      <!-- Dashboard -->
-      <a id="btn-dashboard" href="/dashboard" class="card card-blue">
-        <span class="card-arrow">↗</span>
-        <div class="card-icon icon-blue">📊</div>
-        <div class="card-body">
-          <h3>Data Dashboard</h3>
-          <p>Real-time charts, physical health scores, ML predictions, and tub-level comparison analytics.</p>
+      <!-- Data Dashboard -->
+      <a id="btn-dashboard" href="https://nutritech-rpi-dashboard.onrender.com/" class="nav-card nc-cyan">
+        <div class="card-icon-row">
+          <div class="card-icon ci-cyan">📊</div>
+          <span class="arrow-icon">↗</span>
         </div>
-        <span class="card-badge badge-blue">● Live Data</span>
+        <h3>Data Dashboard</h3>
+        <p>Real-time charts, physical health scores, ML predictions, growth trajectories, and tub-level comparison analytics — open to all team members.</p>
+        <div class="card-tags">
+          <span class="ctag ctag-cyan">● Live Data</span>
+          <span class="ctag ctag-emerald">Open Access</span>
+        </div>
       </a>
 
-      <!-- Experiment Entry -->
-      <a id="btn-entry" href="/entry" class="card card-purple">
-        <span class="card-arrow">↗</span>
-        <div class="card-icon icon-purple">🧪</div>
-        <div class="card-body">
-          <h3>Experiment Entry</h3>
-          <p>Log new experiments, configure tubs, and record manual observations and plant health labels.</p>
+      <!-- Experiment Entry (AUTH) -->
+      <a id="btn-entry" href="#" onclick="gateAuth('/entry'); return false;" class="nav-card nc-violet">
+        <div class="lock-overlay">🔒</div>
+        <div class="card-icon-row">
+          <div class="card-icon ci-violet">🧪</div>
+          <span class="arrow-icon">↗</span>
         </div>
-        <span class="card-badge badge-purple">● Live Now</span>
+        <h3>Experiment Entry</h3>
+        <p>Log experiments, configure tubs, record observations and plant health labels for active research protocols.</p>
+        <div class="card-tags">
+          <span class="ctag ctag-red">Auth Required</span>
+          <span class="ctag ctag-violet">● Active</span>
+        </div>
       </a>
 
-      <!-- Control Panel -->
-      <a id="btn-control" href="https://hierocratical-kaylie-semivocal.ngrok-free.dev" class="card card-green">
-        <span class="card-arrow">↗</span>
-        <div class="card-icon icon-green">🎛️</div>
-        <div class="card-body">
-          <h3>Control Panel</h3>
-          <p>Access the hardware control interface to manage irrigation, lighting schedules, and sensor calibration.</p>
+      <!-- Control Panel (AUTH) -->
+      <a id="btn-control" href="#" onclick="gateAuth('https://hierocratical-kaylie-semivocal.ngrok-free.dev'); return false;" class="nav-card nc-emerald">
+        <div class="lock-overlay">🔒</div>
+        <div class="card-icon-row">
+          <div class="card-icon ci-emerald">🎛️</div>
+          <span class="arrow-icon">↗</span>
         </div>
-        <span class="card-badge badge-green">External Link</span>
+        <h3>Control Panel</h3>
+        <p>Hardware control — irrigation schedules, lighting programs, and live sensor calibration for all active tubs.</p>
+        <div class="card-tags">
+          <span class="ctag ctag-red">Auth Required</span>
+          <span class="ctag ctag-emerald">External Link</span>
+        </div>
       </a>
+
+      <!-- Circuit Panel (Physical) -->
+      <div class="nav-card nc-amber" style="cursor:default">
+        <div class="card-icon-row">
+          <div class="card-icon ci-amber">💧</div>
+        </div>
+        <h3>Circuit Panel</h3>
+        <p>Soil moisture readings visible on the <strong>physical circuit panel</strong> — right side of the setup. Walk to the hardware station to view live capacitive readings per tub.</p>
+        <div class="card-tags">
+          <span class="ctag ctag-amber">Physical Device</span>
+          <span class="ctag ctag-grey">No Software Needed</span>
+        </div>
+      </div>
 
     </div>
 
     <footer class="footer">
-      NutriTech Experimental Platform &nbsp;·&nbsp; 2026 &nbsp;·&nbsp; All sensor data is stored securely in Supabase
+      NUTRITECH EXPERIMENTAL PLATFORM &nbsp;·&nbsp; 2026 &nbsp;·&nbsp; SUPABASE + FLASK &nbsp;·&nbsp; AUTHORIZED USE ONLY
     </footer>
 
   </div>
-  <script src="./assets/virtual-keyboard.js"></script>
+
+  <!-- Supabase for auth reset -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL     = "https://ciosgjvbflsnrkhbriqh.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_VapU8vP433UngqaNKC9xIA_GgWByL9f";
+    const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ── Always sign out & clear token when landing page loads ──
+    (async () => {
+      try {
+        await sbClient.auth.signOut();
+        localStorage.removeItem('nt_token');
+      } catch(e) { /* silent */ }
+    })();
+
+    // ── Redirect to login with encoded target ──
+    function gateAuth(target) {
+      window.location.href = '/login?redirect=' + encodeURIComponent(target);
+    }
+  </script>
+
 </body>
 </html>
