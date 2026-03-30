@@ -19,7 +19,7 @@ def index():
 
 @app.route("/dashboard")
 def dashboard():
-    return redirect("https://nutritech-rpi-dashboard.onrender.com/")
+    return redirect("https://nutritech-rpi-dashboard-0qd4.onrender.com")
 
 @app.route("/login")
 def login_page():
