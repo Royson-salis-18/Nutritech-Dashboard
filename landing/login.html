@@ -509,7 +509,7 @@
 
     // ─── Redirect Target ───
     const params = new URLSearchParams(location.search);
-    const redirectTarget = params.get('redirect') || '/entry';
+    const redirectTarget = params.get('redirect') || 'https://experiments-rpi.onrender.com/';
 
     // ─── Update destination badge dynamically ───
     const badge = document.getElementById('dest-badge');
